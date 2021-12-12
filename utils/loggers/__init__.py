@@ -112,11 +112,8 @@ class Loggers():
 
         if self.tb:
             prefix = colorstr('TensorBoard: ')
-            self.logger.info(f"{prefix} {pred}")
-            self.logger.info(f"{prefix} {predn}")
-            self.logger.info(f"{prefix} {path}")
-            self.logger.info(f"{prefix} {names}")
-            self.logger.info(f"{prefix} {im}")
+            self.logger.info(f"{prefix} Saving Image")
+          
             
         
 
@@ -125,10 +122,6 @@ class Loggers():
         if self.wandb:
             files = sorted(self.save_dir.glob('val*.jpg'))
             self.wandb.log({"Validation": [wandb.Image(str(f), caption=f.name) for f in files]})
-
-        if self.tb:
-            prefix = colorstr('TensorBoard: ')
-            self.logger.info(f"{prefix} {self}")
             
 
 
