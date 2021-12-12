@@ -110,6 +110,8 @@ class Loggers():
         if self.wandb:
             self.wandb.val_one_image(pred, predn, path, names, im)
 
+        #if self.tb:
+            #self.tb.add_image
 
           
             
@@ -162,6 +164,8 @@ class Loggers():
         if self.tb:
             import cv2
             for f in files:
+                print(f)
+                print(f.stem)
                 self.tb.add_image(f.stem, cv2.imread(str(f))[..., ::-1], epoch, dataformats='HWC')
 
         # W&B
