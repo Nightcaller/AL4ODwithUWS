@@ -110,9 +110,7 @@ class Loggers():
         if self.wandb:
             self.wandb.val_one_image(pred, predn, path, names, im)
 
-        if self.tb:
-            prefix = colorstr('TensorBoard: ')
-            self.logger.info(f"{prefix} Saving Image")
+
           
             
         
@@ -122,7 +120,10 @@ class Loggers():
         if self.wandb:
             files = sorted(self.save_dir.glob('val*.jpg'))
             self.wandb.log({"Validation": [wandb.Image(str(f), caption=f.name) for f in files]})
-            
+
+        if self.tb:
+            prefix = colorstr('TensorBoard: ')
+            self.logger.info(f"{prefix} Saving Image") 
 
 
     def on_fit_epoch_end(self, vals, epoch, best_fitness, fi):
