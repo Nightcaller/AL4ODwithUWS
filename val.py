@@ -227,6 +227,7 @@ def run(data,
                 save_one_txt(predn, save_conf, shape, file=save_dir / 'labels' / (path.stem + '.txt'))
             if save_json:
                 save_one_json(predn, jdict, path, class_map)  # append to COCO-JSON dictionary
+            print("##########################")
             callbacks.run('on_val_image_end', pred, predn, path, names, im[si])
 
         # Plot images

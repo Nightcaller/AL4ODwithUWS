@@ -34,6 +34,35 @@ def autopad(k, p=None):  # kernel, padding
     return p
 
 
+#####################################
+#ADDED Dropout2D Model
+#####################################
+class Dropout2d(nn.Module):
+    def __init__(self, p=0.3):
+        super().__init__()
+        print("TEST")
+        self.drop_layer = nn.Dropout2d(p=p)
+        self.drop_layer.train()
+
+    def forward(self, x):
+        return self.drop_layer(x)
+
+#####################################
+#ADDED Dropout Model
+#####################################
+class Dropout(nn.Module):
+    def __init__(self, p=0.3):
+        super().__init__()
+        print("TEST")
+        self.drop_layer = nn.Dropout(p=p)
+        self.drop_layer.train()
+
+    def forward(self, x):
+        return self.drop_layer(x)
+
+#####################################
+
+
 class Conv(nn.Module):
     # Standard convolution
     def __init__(self, c1, c2, k=1, s=1, p=None, g=1, act=True):  # ch_in, ch_out, kernel, stride, padding, groups

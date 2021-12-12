@@ -19,6 +19,7 @@ from utils.torch_utils import de_parallel
 LOGGERS = ('csv', 'tb', 'wandb')  # text-file, TensorBoard, Weights & Biases
 RANK = int(os.getenv('RANK', -1))
 
+#wandb
 try:
     import wandb
 
@@ -76,6 +77,8 @@ class Loggers():
     def on_pretrain_routine_end(self):
         # Callback runs on pre-train routine end
         paths = self.save_dir.glob('*labels*.jpg')  # training labels
+
+        # W&B
         if self.wandb:
             self.wandb.log({"Labels": [wandb.Image(str(x), caption=x.name) for x in paths]})
 
@@ -90,12 +93,15 @@ class Loggers():
             if ni < 3:
                 f = self.save_dir / f'train_batch{ni}.jpg'  # filename
                 Thread(target=plot_images, args=(imgs, targets, paths, f), daemon=True).start()
+
+                # W&B
             if self.wandb and ni == 10:
                 files = sorted(self.save_dir.glob('train*.jpg'))
                 self.wandb.log({'Mosaics': [wandb.Image(str(f), caption=f.name) for f in files if f.exists()]})
 
     def on_train_epoch_end(self, epoch):
         # Callback runs on train epoch end
+        # W&B
         if self.wandb:
             self.wandb.current_epoch = epoch + 1
 
@@ -104,11 +110,27 @@ class Loggers():
         if self.wandb:
             self.wandb.val_one_image(pred, predn, path, names, im)
 
+        if self.tb:
+            prefix = colorstr('TensorBoard: ')
+            self.logger.info(f"{prefix} {pred}")
+            self.logger.info(f"{prefix} {predn}")
+            self.logger.info(f"{prefix} {path}")
+            self.logger.info(f"{prefix} {names}")
+            self.logger.info(f"{prefix} {im}")
+            
+        
+
     def on_val_end(self):
         # Callback runs on val end
         if self.wandb:
             files = sorted(self.save_dir.glob('val*.jpg'))
             self.wandb.log({"Validation": [wandb.Image(str(f), caption=f.name) for f in files]})
+
+        if self.tb:
+            prefix = colorstr('TensorBoard: ')
+            self.logger.info(f"{prefix} {self}")
+            
+
 
     def on_fit_epoch_end(self, vals, epoch, best_fitness, fi):
         # Callback runs at the end of each fit (train+val) epoch
@@ -123,13 +145,15 @@ class Loggers():
         if self.tb:
             for k, v in x.items():
                 self.tb.add_scalar(k, v, epoch)
-
+        
+        # W&B
         if self.wandb:
             self.wandb.log(x)
             self.wandb.end_epoch(best_result=best_fitness == fi)
 
     def on_model_save(self, last, epoch, final_epoch, best_fitness, fi):
         # Callback runs on model save event
+        # W&B
         if self.wandb:
             if ((epoch + 1) % self.opt.save_period == 0 and not final_epoch) and self.opt.save_period != -1:
                 self.wandb.log_model(last.parent, self.opt, epoch, fi, best_model=best_fitness == fi)
@@ -146,6 +170,7 @@ class Loggers():
             for f in files:
                 self.tb.add_image(f.stem, cv2.imread(str(f))[..., ::-1], epoch, dataformats='HWC')
 
+        # W&B
         if self.wandb:
             self.wandb.log({"Results": [wandb.Image(str(f), caption=f.name) for f in files]})
             # Calling wandb.log. TODO: Refactor this into WandbLogger.log_model

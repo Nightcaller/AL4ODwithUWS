@@ -26,6 +26,11 @@ except ImportError:
     thop = None
 
 
+#dropout layer activation function                  added
+def apply_dropout(m):
+    if type(m) == nn.Dropout:
+        m.train()
+
 @contextmanager
 def torch_distributed_zero_first(local_rank: int):
     """

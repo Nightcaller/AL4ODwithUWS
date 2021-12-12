@@ -97,6 +97,8 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
 
     # Config
     plots = not evolve  # create plots
+
+    
     cuda = device.type != 'cpu'
     init_seeds(1 + RANK)
     with torch_distributed_zero_first(LOCAL_RANK):
