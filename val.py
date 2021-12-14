@@ -243,7 +243,7 @@ def run(data,
 #added
         if plot_dropout and batch_i < 3:
             f = save_dir / f'dropout_batch{batch_i}.jpg'  # labels
-            Thread(target=plot_images, args=(im, targets, paths, f, names), daemon=True).start()
+            #Thread(target=plot_images, args=(im, targets, paths, f, names), daemon=True).start()
             callbacks.run('on_dropout_plot', pred, predn, path, names, im[si])
 ######
 
