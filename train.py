@@ -366,6 +366,9 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
                                            plots=False,
                                            callbacks=callbacks,
                                            compute_loss=compute_loss,
+                                           #added
+          #                                 plot_dropout=True
+                                           #######
                                            ),
 
             # Update best mAP
