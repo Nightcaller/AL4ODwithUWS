@@ -369,7 +369,7 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
                                            #added
           #                                 plot_dropout=True
                                            #######
-                                           ),
+                                           )
 
             # Update best mAP
             fi = fitness(np.array(results).reshape(1, -1))  # weighted combination of [P, R, mAP@.5, mAP@.5-.95]
