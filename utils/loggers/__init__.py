@@ -113,7 +113,13 @@ class Loggers():
         #if self.tb:
             #self.tb.add_image
 
-          
+    def on_dropout_plot(self, pred, predn, path, names, im):
+        # Callback runs on val image end
+        if self.tb:
+            #self.tb.add_image("Test", im, 10, dataformats='HWC')
+            prefix = colorstr('TensorBoard: ')
+            self.logger.info(f"{prefix} Saving Dropout Image") 
+        
             
         
 
@@ -122,10 +128,6 @@ class Loggers():
         if self.wandb:
             files = sorted(self.save_dir.glob('val*.jpg'))
             self.wandb.log({"Validation": [wandb.Image(str(f), caption=f.name) for f in files]})
-
-        if self.tb:
-            prefix = colorstr('TensorBoard: ')
-            self.logger.info(f"{prefix} Saving Image") 
 
 
     def on_fit_epoch_end(self, vals, epoch, best_fitness, fi):
