@@ -40,7 +40,6 @@ def autopad(k, p=None):  # kernel, padding
 class Dropout2d(nn.Module):
     def __init__(self, p=0.3):
         super().__init__()
-        print("TEST")
         self.drop_layer = nn.Dropout2d(p=p)
         self.drop_layer.train()
 
@@ -53,7 +52,6 @@ class Dropout2d(nn.Module):
 class Dropout(nn.Module):
     def __init__(self, p=0.3):
         super().__init__()
-        print("TEST")
         self.drop_layer = nn.Dropout(p=p)
         self.drop_layer.train()
 
