@@ -109,7 +109,7 @@ def run(data,
         callbacks=Callbacks(),
         compute_loss=None,
 #added
-  #      plot_dropout=False, # plot most interessting dropout images
+        plot_dropout=False, # plot most interessting dropout images
 #########
         ):
     # Initialize/load model and set device
@@ -241,10 +241,10 @@ def run(data,
             Thread(target=plot_images, args=(im, output_to_target(out), paths, f, names), daemon=True).start()
 
 #added
-#        if plot_dropout and batch_i < 3:
- #           f = save_dir / f'dropout_batch{batch_i}.jpg'  # labels
-  #          #Thread(target=plot_images, args=(im, targets, paths, f, names), daemon=True).start()
-   #         callbacks.run('on_dropout_plot', pred, predn, path, names, im[si])
+        if plot_dropout and batch_i < 3:
+            f = save_dir / f'dropout_batch{batch_i}.jpg'  # labels
+            Thread(target=plot_images, args=(im, targets, paths, f, names), daemon=True).start()
+            callbacks.run('on_dropout_plot', pred, predn, path, names, im[si])
 ######
 
     # Compute metrics
