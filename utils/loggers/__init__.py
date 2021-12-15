@@ -110,13 +110,11 @@ class Loggers():
         if self.wandb:
             self.wandb.val_one_image(pred, predn, path, names, im)
 
-        #if self.tb:
-            #self.tb.add_image
 
     def on_dropout_plot(self, pred, predn, path, names, im):
         # Callback runs on val image end
         if self.tb:
-            self.tb.add_image("Test", im, 10, dataformats='HWC')
+            #self.tb.add_image("Test", im, 10, dataformats='HWC')
             prefix = colorstr('TensorBoard: ')
             self.logger.info(f"{prefix} Saving Dropout Image") 
         
