@@ -367,7 +367,7 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
                                            callbacks=callbacks,
                                            compute_loss=compute_loss,
                                            #added
-          #                                 plot_dropout=True
+                                           plot_dropout=True,
                                            #######
                                            )
 
