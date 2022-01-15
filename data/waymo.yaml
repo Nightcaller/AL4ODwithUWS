@@ -10,6 +10,3 @@ test:  # test images (optional)
 nc: 3  # number of classes
 names: [ 'car', 'person', 'bicycle']  # class names
 
-
-# Download script/URL (optional)
-download: /content/drive/MyDrive/Waymo
