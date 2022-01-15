@@ -196,6 +196,7 @@ def run(data,
 
         # Metrics
         for si, pred in enumerate(out):
+
             labels = targets[targets[:, 0] == si, 1:]
             nl = len(labels)
             tcls = labels[:, 0].tolist() if nl else []  # target class
@@ -241,10 +242,13 @@ def run(data,
             Thread(target=plot_images, args=(im, output_to_target(out), paths, f, names), daemon=True).start()
 
 #added
-        if plot_dropout and batch_i < 3:
-            f = save_dir / f'dropout_batch{batch_i}.jpg'  # labels
-            Thread(target=plot_images, args=(im, targets, paths, f, names), daemon=True).start()
-            callbacks.run('on_dropout_plot', pred, predn, path, names, im[si])
+
+       # plot_dropout = True
+       # if plot_dropout and batch_i < 3:
+       #     f = save_dir / f'dropout_batch{batch_i}.jpg'  # labels
+       #     #Thread(target=plot_images, args=(im, targets, paths, f, names), daemon=True).start()
+       #     callbacks.run('on_dropout_plot', pred, predn, path, names, im)
+
 ######
 
     # Compute metrics

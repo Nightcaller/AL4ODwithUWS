@@ -114,7 +114,22 @@ class Loggers():
     def on_dropout_plot(self, pred, predn, path, names, im):
         # Callback runs on val image end
         if self.tb:
-            #self.tb.add_image("Test", im, 10, dataformats='HWC')
+            import cv2
+            #
+            # TODO: draw BBs on Image  
+            # Tag, image, epoch, dataformats = Channel, Height, Width
+            #self.tb.add_image("Test", im.numpy().transpose(1, 2, 0), 10, dataformats='HWC')
+            
+            # single image =>  im[None, :]
+            #Thread(target=plot_images, args=(im[None, :], pred, path._str), daemon=True).start()
+            if (len(im.shape) == 3):
+                im = im[None, :]
+
+
+
+            plot_images(im, pred, path._str,names = predn)
+            self.tb.add_image("Images", cv2.imread("images.jpg")[...,::-1], 8, dataformats="HWC")
+            
             prefix = colorstr('TensorBoard: ')
             self.logger.info(f"{prefix} Saving Dropout Image") 
         
