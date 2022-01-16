@@ -7,6 +7,6 @@ val:  validation/images  # val images (relative to 'path')
 test:  # test images (optional)
 
 # Classes
-nc: 3  # number of classes
-names: [ 'car', 'person', 'bicycle']  # class names
+nc: 4  # number of classes
+names: [ 'car', 'person', 'bicycle', 'sign']  # class names
 
