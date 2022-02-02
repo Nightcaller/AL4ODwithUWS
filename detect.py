@@ -34,6 +34,8 @@ from utils.general import (LOGGER, check_file, check_img_size, check_imshow, che
 from utils.plots import Annotator, colors, save_one_box
 from utils.torch_utils import select_device, time_sync, apply_dropout
 
+from utils.active_learning import random_sampling, uncertainty, least_confidence
+from utils.al_helpers import save_text, plot_distribution
 
 @torch.no_grad()
 def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
@@ -61,7 +63,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         hide_conf=False,  # hide confidences
         half=False,  # use FP16 half-precision inference
         dnn=False,  # use OpenCV DNN for ONNX inference
-        dropout=1,
+        dropout=5,
         ):
     source = str(source)
     save_img = not nosave and not source.endswith('.txt')  # save inference images
@@ -97,10 +99,14 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         bs = 1  # batch_size
     vid_path, vid_writer = [None] * bs, [None] * bs
 
-
+    al = True                               #added
         #activate dropout layers
-    if(dropout>1):
-        model.apply(apply_dropout)                          #added
+    if(dropout>1):                          #added
+        model.apply(apply_dropout)          #added
+    if(al):                                 #added
+        al_rnd, al_u, al_lc = [], [], []
+        save_acq = str(save_dir / 'acquisition' )
+        (save_dir / 'acquisition').mkdir(parents=True, exist_ok=True)
 
     # Run inference
     model.warmup(imgsz=(1, 3, *imgsz), half=half)  # warmup
@@ -133,8 +139,25 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         # pred = utils.general.apply_classifier(pred, classifier_model, im, im0s)
 
 
+        
+    
+        #added
+        #rnd_sampling = True
+        #al_uncertainty = False
 
-        first = True                                #added
+        # Select random    
+       # if 'al_rnd' in locals():
+       #     al_rnd.append((Path(path).stem, random_sampling()))
+     #   if 'al_u' in locals():
+     #       al_u.append((Path(path).stem, uncertainty(predictions, Path(path), imgsz)))
+       # if 'al_lc' in locals():
+       #     al_lc.append(least_confidence(pred, Path(path)))
+
+
+        #################
+
+
+        
         allDetections = []                          #added
         im0 = im0s.copy()                           #added
         
@@ -147,11 +170,8 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                     p, im0, frame = path[i], im0s[i].copy(), dataset.count
                     s += f'{i}: '
                 else:
-                    if first:                               #added First image will be taken from source after that rewrite image
-                            first = False                       #added
-                            p, im0, frame = path, im0s.copy(), getattr(dataset, 'frame', 0)  #TODO: Wieso nicht gleicb im0 wieso First Copy then im0
-                    else:
-                            p, im0, frame = path, im0, getattr(dataset, 'frame', 0)         #added
+                    #p, im0, frame = path, im0s.copy(), getattr(dataset, 'frame', 0)  
+                    p, im0, frame = path, im0, getattr(dataset, 'frame', 0)         #added - draw on the same image
 
                 p = Path(p)  # to Path
                 save_path = str(save_dir / p.name)  # im.jpg
@@ -222,15 +242,30 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         LOGGER.info(f"Results saved to {colorstr('bold', save_dir)}{s}")
     if update:
         strip_optimizer(weights)  # update model (to fix SourceChangeWarning)
+    
+    #added
+    if al:                                               
+        if al_rnd:
+            #sort & plot & save txt
+            al_rnd.sort(key=lambda x:x[1])
+            save_text(al_rnd, save_acq, "RandomSampling")
+            plot_distribution(al_rnd, save_acq, "RandomSampling")
 
+        if al_lc:
+            #sort & plot & save txt
+            save_text(al_lc, save_acq, "LeastConfidence")
+            plot_distribution(al_lc, save_acq, classnames=names, type="LeastConfidence")
+
+    
+    ##########
 
 def parse_opt():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'yolov5s.pt', help='model path(s)')
+    parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'models/colabBaseline.pt', help='model path(s)')
     parser.add_argument('--source', type=str, default=ROOT / 'data/images', help='file/dir/URL/glob, 0 for webcam')
     parser.add_argument('--imgsz', '--img', '--img-size', nargs='+', type=int, default=[640], help='inference size h,w')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='confidence threshold')
-    parser.add_argument('--iou-thres', type=float, default=0.45, help='NMS IoU threshold')
+    parser.add_argument('--iou-thres', type=float, default=0.45, help='NMS t threshold')
     parser.add_argument('--max-det', type=int, default=1000, help='maximum detections per image')
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--view-img', action='store_true', help='show results')
@@ -252,7 +287,9 @@ def parse_opt():
     parser.add_argument('--half', action='store_true', help='use FP16 half-precision inference')
     parser.add_argument('--dnn', action='store_true', help='use OpenCV DNN for ONNX inference')
 
-    parser.add_argument('--dropout', type=int, default=1, help='activate dropout and generate number of predicitons') #added
+    parser.add_argument('--dropout', type=int, default=5, help='activate dropout and generate number of predicitons') #added
+    #parser.add_argument('--rnd_sampling', action='store_true', help='activate random sampling') #added
+
     opt = parser.parse_args()
     opt.imgsz *= 2 if len(opt.imgsz) == 1 else 1  # expand
     print_args(FILE.stem, opt)
