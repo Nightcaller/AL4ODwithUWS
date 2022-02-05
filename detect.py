@@ -14,6 +14,7 @@ Usage:
 
 import argparse
 import os
+from re import U
 import sys
 from pathlib import Path
 
@@ -151,7 +152,13 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
 
         if 'al_u' in locals():
-            predictions = uncertainty(predictions, Path(path), imgsz)
+            predictions, uAll = uncertainty(predictions, Path(path), imgsz)
+            
+            u = 0
+            if (len(uAll) > 0):
+                u =  max(uAll)
+            
+            al_u.append((Path(path).stem, u))
   
 
 
@@ -194,8 +201,6 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                 gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
                 imc = im0.copy() if save_crop else im0  # for save_crop
 
-                ## Added for mean 
-
                 annotator = Annotator(im0, line_width=line_thickness, example=str(names))
 
                 if len(det):
@@ -205,7 +210,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                     # Print results
                     for c in det[:, -1].unique():
                         n = (det[:, -1] == c).sum()  # detections per class
-                        s += f"{n} {names[int(c)]}{'s' * (n > 1)}, "  # add to string
+                        #s += f"{n} {names[int(c)]}{'s' * (n > 1)}, "  # add to string
 
                     # Write results
                     for *xyxy, conf, cls in reversed(det):
@@ -218,7 +223,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                         if save_img or save_crop or view_img:  # Add bbox to image
                             c = int(cls)  # integer class
                             if(i == (len(prediction)-1) and 'al_u' in locals()):
-                                label = f'{len(prediction)-1} {conf:.2f}' 
+                                label = f'{len(prediction)-1} | {conf:.2f}' 
                                 annotator = Annotator(im0, line_width=2, example=str(names))
                                 annotator.box_label(xyxy, label, (0,0,0))
                             else:
@@ -228,7 +233,11 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                                 save_one_box(xyxy, imc, file=save_dir / 'crops' / names[c] / f'{p.stem}.jpg', BGR=True)
 
             # Print time (inference-only)
-#            LOGGER.info(f'{s}Done. ({t3 - t2:.3f}s)')
+        
+        
+            ##
+            #EXPORT IMAGE PRINTING
+
 
             # Stream results
             im0 = annotator.result()
@@ -255,6 +264,12 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                         vid_writer[i] = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
                     vid_writer[i].write(im0)
 
+                #####
+
+
+        #moved logger so it only logs after it's finished with one Image
+        LOGGER.info(f'{s}Done. ({t3 - t2:.3f}s)')
+
     # Print results
     t = tuple(x / seen * 1E3 for x in dt)  # speeds per image
     LOGGER.info(f'Speed: %.1fms pre-process, %.1fms inference, %.1fms NMS per image at shape {(1, 3, *imgsz)}' % t)
@@ -265,24 +280,28 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         strip_optimizer(weights)  # update model (to fix SourceChangeWarning)
     
     #added
+     #sort & plot & save txt
     if al:                                               
         if al_rnd:
-            #sort & plot & save txt
+           
             al_rnd.sort(key=lambda x:x[1])
             save_text(al_rnd, save_acq, "RandomSampling")
-            plot_distribution(al_rnd, save_acq, "RandomSampling")
+            plot_distribution(al_rnd, save_acq, "RandomSampling", names)
+
+        if al_u:
+          
+            al_u.sort(key=lambda x:x[1])
+            save_text(al_u, save_acq, "DropoutUncertainty")
+            plot_distribution(al_u, save_acq, "DropoutUncertainty", names)
 
         if al_lc:
-            #sort & plot & save txt
             save_text(al_lc, save_acq, "LeastConfidence")
             plot_distribution(al_lc, save_acq, classnames=names, type="LeastConfidence")
-
-    
     ##########
 
 def parse_opt():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'models/colabBaseline.pt', help='model path(s)')
+    parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'models/initial.pt', help='model path(s)')
     parser.add_argument('--source', type=str, default=ROOT / 'data/images', help='file/dir/URL/glob, 0 for webcam')
     parser.add_argument('--imgsz', '--img', '--img-size', nargs='+', type=int, default=[640], help='inference size h,w')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='confidence threshold')

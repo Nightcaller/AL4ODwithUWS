@@ -1,5 +1,11 @@
+from platform import python_version_tuple
 import random
+from sklearn.cluster import cluster_optics_dbscan
 import torch
+import numpy as np
+
+
+
 
 from utils.metrics import box_iou
 
@@ -7,11 +13,14 @@ def random_sampling():
 
     return random.uniform(0, 1)
 
-def uncertainty(predictions, path, imgSize , threshold_iou=0.8):
+def uncertainty(predictions, path, imgSize,mode="DBScan" , threshold_iou=0.8):
     
     objects = []
+    uAll = []
     first = True
      
+
+    #cluster all predicitions into objects 
     for prediction in predictions:
         for i, det in enumerate(prediction):
 
@@ -29,7 +38,7 @@ def uncertainty(predictions, path, imgSize , threshold_iou=0.8):
                continue
             
 
-            
+            # enumerate all objects and check the ious of already discoverd objects
             for i, d in enumerate(det):
                 ious = []
                 for object in objects:
@@ -46,12 +55,24 @@ def uncertainty(predictions, path, imgSize , threshold_iou=0.8):
                 else:
                     objects.append(d[None,:])
 
+
+    # Get the mean box from every detected object
+    #   and
+    # Calc uncertainty by clustering corners and returning the mean of the convex hull area (DBScan)
     for i, obj in enumerate(objects):
         
         mean = torch.mean(obj, 0)
         objects[i] = torch.cat((obj, mean[None,:]), 0) 
-        #print(objects)
-    return objects
+
+        if(mode == "DBScan"):
+            uAll.append(cluster_dbscan(obj))
+        
+
+    
+
+    return objects, uAll
+
+
 '''            for j, iou in enumerate(ious):
                 
                 #if there is no intersection at all it probably is a newly discoverd object
@@ -78,13 +99,23 @@ def uncertainty(predictions, path, imgSize , threshold_iou=0.8):
                 
 
 #Get uncertainty of cluster 
-def cluster(object):
+def cluster_dbscan(obj):
     
+    from scipy.spatial import ConvexHull
+
+    points1 = obj[:,:2].numpy()
+    points2 = obj[:,2:4].numpy()
+
+    if (len(points1) <= 2):
+        return 0
+
+    try:
+        u = (ConvexHull(points1).area + ConvexHull(points2).area) / 2
+    except:
+        u = 0
+        pass
     
-    
-    
-    
-    return
+    return u
  
 
 
