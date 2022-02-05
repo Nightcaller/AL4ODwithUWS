@@ -156,10 +156,10 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             
             u = 0
             if (len(uAll) > 0):
-                u =  max(uAll)
-            
+                u =  max(uAll)    
             al_u.append((Path(path).stem, u))
-  
+            singleObject = False
+
 
 
        # if 'al_lc' in locals():
@@ -169,14 +169,17 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         #################
 
 
+
+
         
         im0 = im0s.copy()                           #added
         
         # Process predictions
 
         for objN ,prediction in enumerate(predictions):
-            if 'al_u' in locals():              #added
+            if 'al_u' in locals() and singleObject:              #added
                 im0 = im0s.copy()               #added
+
             for i, det in enumerate(prediction):  # per image
 
                 det = det[None,:]
@@ -191,8 +194,8 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
                 p = Path(p)  # to Path
 
-                if 'al_u' in locals():
-                    save_path = str(save_dir) + "/" + str(objN) + "_" + p.name  # im.jpg
+                if 'al_u' in locals() and singleObject:
+                    save_path = str(save_dir) + "/" + p.stem + "_" + str(objN) + ".jpg"  # im.jpg
                 else:
                     save_path = str(save_dir / p.name)  # im.jpg
 
@@ -301,7 +304,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
 def parse_opt():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'models/best.pt', help='model path(s)')
+    parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'models/dropDist.pt', help='model path(s)')
     parser.add_argument('--source', type=str, default=ROOT / 'data/images', help='file/dir/URL/glob, 0 for webcam')
     parser.add_argument('--imgsz', '--img', '--img-size', nargs='+', type=int, default=[640], help='inference size h,w')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='confidence threshold')
