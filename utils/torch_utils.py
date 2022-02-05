@@ -28,8 +28,11 @@ except ImportError:
 
 #dropout layer activation function                  added
 def apply_dropout(m):
-    if type(m) == nn.Dropout or nn.Dropout2d:
+    if type(m) == nn.Dropout:
         m.train()
+    if type(m) == nn.Dropout2d:
+        m.train()
+    
 ##################    
 
 @contextmanager

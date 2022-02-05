@@ -58,7 +58,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         project=ROOT / 'runs/detect',  # save results to project/name
         name='exp',  # save results to project/name
         exist_ok=False,  # existing project/name ok, do not increment
-        line_thickness=3,  # bounding box thickness (pixels)
+        line_thickness=1,  # bounding box thickness (pixels)
         hide_labels=False,  # hide labels
         hide_conf=False,  # hide confidences
         half=False,  # use FP16 half-precision inference
@@ -148,8 +148,13 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         # Select random    
        # if 'al_rnd' in locals():
        #     al_rnd.append((Path(path).stem, random_sampling()))
-     #   if 'al_u' in locals():
-     #       al_u.append((Path(path).stem, uncertainty(predictions, Path(path), imgsz)))
+
+
+        if 'al_u' in locals():
+            predictions = uncertainty(predictions, Path(path), imgsz)
+  
+
+
        # if 'al_lc' in locals():
        #     al_lc.append(least_confidence(pred, Path(path)))
 
@@ -158,13 +163,17 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
 
         
-        allDetections = []                          #added
         im0 = im0s.copy()                           #added
         
         # Process predictions
 
-        for prediction in predictions:
+        for objN ,prediction in enumerate(predictions):
+            if 'al_u' in locals():              #added
+                im0 = im0s.copy()               #added
             for i, det in enumerate(prediction):  # per image
+
+                det = det[None,:]
+
                 seen += 1
                 if webcam:  # batch_size >= 1
                     p, im0, frame = path[i], im0s[i].copy(), dataset.count
@@ -174,12 +183,21 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                     p, im0, frame = path, im0, getattr(dataset, 'frame', 0)         #added - draw on the same image
 
                 p = Path(p)  # to Path
-                save_path = str(save_dir / p.name)  # im.jpg
+
+                if 'al_u' in locals():
+                    save_path = str(save_dir) + "/" + str(objN) + "_" + p.name  # im.jpg
+                else:
+                    save_path = str(save_dir / p.name)  # im.jpg
+
                 txt_path = str(save_dir / 'labels' / p.stem) + ('' if dataset.mode == 'image' else f'_{frame}')  # im.txt
-                s += '%gx%g ' % im.shape[2:]  # print string
+   #             s += '%gx%g ' % im.shape[2:]  # print string
                 gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
                 imc = im0.copy() if save_crop else im0  # for save_crop
+
+                ## Added for mean 
+
                 annotator = Annotator(im0, line_width=line_thickness, example=str(names))
+
                 if len(det):
                     # Rescale boxes from img_size to im0 size
                     det[:, :4] = scale_coords(im.shape[2:], det[:, :4], im0.shape).round()
@@ -188,8 +206,6 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                     for c in det[:, -1].unique():
                         n = (det[:, -1] == c).sum()  # detections per class
                         s += f"{n} {names[int(c)]}{'s' * (n > 1)}, "  # add to string
-
-                    allDetections.append(det) #added
 
                     # Write results
                     for *xyxy, conf, cls in reversed(det):
@@ -201,13 +217,18 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
                         if save_img or save_crop or view_img:  # Add bbox to image
                             c = int(cls)  # integer class
-                            label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
-                            annotator.box_label(xyxy, label, color=colors(c, True))
+                            if(i == (len(prediction)-1) and 'al_u' in locals()):
+                                label = f'{len(prediction)-1} {conf:.2f}' 
+                                annotator = Annotator(im0, line_width=2, example=str(names))
+                                annotator.box_label(xyxy, label, (0,0,0))
+                            else:
+                                label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
+                                annotator.box_label(xyxy, label, color=colors(c, True))
                             if save_crop:
                                 save_one_box(xyxy, imc, file=save_dir / 'crops' / names[c] / f'{p.stem}.jpg', BGR=True)
 
             # Print time (inference-only)
-            LOGGER.info(f'{s}Done. ({t3 - t2:.3f}s)')
+#            LOGGER.info(f'{s}Done. ({t3 - t2:.3f}s)')
 
             # Stream results
             im0 = annotator.result()
@@ -261,7 +282,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
 def parse_opt():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'models/best-4.pt', help='model path(s)')
+    parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'models/colabBaseline.pt', help='model path(s)')
     parser.add_argument('--source', type=str, default=ROOT / 'data/images', help='file/dir/URL/glob, 0 for webcam')
     parser.add_argument('--imgsz', '--img', '--img-size', nargs='+', type=int, default=[640], help='inference size h,w')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='confidence threshold')
@@ -281,13 +302,13 @@ def parse_opt():
     parser.add_argument('--project', default=ROOT / 'runs/detect', help='save results to project/name')
     parser.add_argument('--name', default='exp', help='save results to project/name')
     parser.add_argument('--exist-ok', action='store_true', help='existing project/name ok, do not increment')
-    parser.add_argument('--line-thickness', default=3, type=int, help='bounding box thickness (pixels)')
+    parser.add_argument('--line-thickness', default=1, type=int, help='bounding box thickness (pixels)')
     parser.add_argument('--hide-labels', default=False, action='store_true', help='hide labels')
     parser.add_argument('--hide-conf', default=False, action='store_true', help='hide confidences')
     parser.add_argument('--half', action='store_true', help='use FP16 half-precision inference')
     parser.add_argument('--dnn', action='store_true', help='use OpenCV DNN for ONNX inference')
 
-    parser.add_argument('--dropout', type=int, default=5, help='activate dropout and generate number of predicitons') #added
+    parser.add_argument('--dropout', type=int, default=20, help='activate dropout and generate number of predicitons') #added
     #parser.add_argument('--rnd_sampling', action='store_true', help='activate random sampling') #added
 
     opt = parser.parse_args()
