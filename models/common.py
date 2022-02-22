@@ -52,7 +52,7 @@ class Dropout2d(nn.Module):
 class Dropout(nn.Module):
     def __init__(self, p=0.3):
         super().__init__()
-        self.drop_layer = nn.Dropout(0.1)
+        self.drop_layer = nn.Dropout(p=p)
         self.drop_layer.train()
 
     def forward(self, x):
