@@ -103,8 +103,8 @@ def cluster_dbscan(obj):
     
     from scipy.spatial import ConvexHull
 
-    points1 = obj[:,:2].numpy()
-    points2 = obj[:,2:4].numpy()
+    points1 = obj[:,:2].cpu().numpy()
+    points2 = obj[:,2:4].cpu().numpy()
 
     if (len(points1) <= 2):
         return 0

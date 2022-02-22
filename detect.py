@@ -100,6 +100,8 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         bs = 1  # batch_size
     vid_path, vid_writer = [None] * bs, [None] * bs
 
+
+#########
     al = True                               #added
         #activate dropout layers
     if(dropout>1):                          #added
@@ -108,6 +110,8 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         al_rnd, al_u, al_lc = [], [], []
         save_acq = str(save_dir / 'acquisition' )
         (save_dir / 'acquisition').mkdir(parents=True, exist_ok=True)
+##########
+
 
     # Run inference
     model.warmup(imgsz=(1, 3, *imgsz), half=half)  # warmup
@@ -150,7 +154,6 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
        # if 'al_rnd' in locals():
        #     al_rnd.append((Path(path).stem, random_sampling()))
 
-
         if 'al_u' in locals():
             predictions, uAll = uncertainty(predictions, Path(path), imgsz)
             
@@ -159,8 +162,6 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                 u =  max(uAll)    
             al_u.append((Path(path).stem, u))
             singleObject = False
-
-
 
        # if 'al_lc' in locals():
        #     al_lc.append(least_confidence(pred, Path(path)))
@@ -200,7 +201,10 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                     save_path = str(save_dir / p.name)  # im.jpg
 
                 txt_path = str(save_dir / 'labels' / p.stem) + ('' if dataset.mode == 'image' else f'_{frame}')  # im.txt
+    
+    #removed 
    #             s += '%gx%g ' % im.shape[2:]  # print string
+
                 gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
                 imc = im0.copy() if save_crop else im0  # for save_crop
 
