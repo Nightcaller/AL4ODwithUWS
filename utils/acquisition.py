@@ -28,7 +28,7 @@ def moveSelection(imageNames, sourceDir, targetDir):
 
 
 
-def acquisition(acqSource, source, target, threshold, modes=["bot"]):
+def selection(acqSource, source, target, threshold, modes=["bot"]):
 
     acq = loadAcqFile(acqSource)
 
