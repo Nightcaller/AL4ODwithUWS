@@ -1,6 +1,5 @@
 import os
 
-
 def loadAcqFile(source):
 
     file = open(source, 'r')
@@ -26,9 +25,7 @@ def moveSelection(imageNames, sourceDir, targetDir):
 
 
 
-
-
-def selection(acqSource, source, target, threshold, modes=["bot"]):
+def selection(acqSource, source, target, threshold, modes):
 
     acq = loadAcqFile(acqSource)
 
