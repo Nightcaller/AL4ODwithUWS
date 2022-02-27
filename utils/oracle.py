@@ -69,7 +69,7 @@ def compare(gt, pred, name):
     print(ious)
     for i, iou in enumerate(ious):
         maxIoU = torch.max(iou)
-        index = (iou == maxIoU).nonzero(as_tuple=True)
+        index = (iou == maxIoU).nonzero(as_tuple=False)
 
         
         print(iou)
