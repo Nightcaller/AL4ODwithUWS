@@ -33,7 +33,7 @@ def loadLabels(labelPath, files=None):
         with open(labelFile) as f:
             label = np.array([x.split() for x in f.read().strip().splitlines()], dtype=np.float32)  # labels [class, x,y,w,h]
             
-
+        print(label)
         classes = torch.from_numpy(label[:,0])
         boxes = torch.from_numpy(label[:,1:])
         boxes = xywh2xyxy(boxes)
@@ -140,10 +140,10 @@ def autOracle(gtPath, acqPath=None, predPath=None):
         missTotal += miss
         
         
-        imagePath = gtPath+"/images/"+name+".jpg"
-        annoPath = gtPath+"/images/anno"+name+".jpg"
-        if(predPath is not None):
-            annotate_image(imagePath,annoPath,gtLabels[i], predLabels[i], hits)
+        #imagePath = gtPath+"/images/"+name+".jpg"
+        #annoPath = gtPath+"/images/anno"+name+".jpg"
+        #if(predPath is not None):
+        #    annotate_image(imagePath,annoPath,gtLabels[i], predLabels[i], hits)
         
 
     # compare gtBB to all predBB and check if there is an IOU > Threshold (~95-99)
