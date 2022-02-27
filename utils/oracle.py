@@ -73,6 +73,7 @@ def compare(gt, pred, name):
 
         
         print(iou)
+        print(index)
         #check if classes match
         if (pred[i,4] == gt[index,4]):
             hits[index] = maxIoU
