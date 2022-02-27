@@ -224,7 +224,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                 txt_path = str(save_dir / 'labels' / p.stem) + ('' if dataset.mode == 'image' else f'_{frame}')  # im.txt
     
     #removed 
-   #             s += '%gx%g ' % im.shape[2:]  # print string
+   #             s += '%gx%g ' % im.shape[2:]  # print string           #removed Logger
 
                 gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
                 imc = im0.copy() if save_crop else im0  # for save_crop
@@ -235,9 +235,9 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                     # Rescale boxes from img_size to im0 size
                     det[:, :4] = scale_coords(im.shape[2:], det[:, :4], im0.shape).round()
 
-                    # Print results
-                    for c in det[:, -1].unique():
-                        n = (det[:, -1] == c).sum()  # detections per class
+                    # Print results                 #removed Logger
+                    #for c in det[:, -1].unique():
+                    #    n = (det[:, -1] == c).sum()  # detections per class
                         #s += f"{n} {names[int(c)]}{'s' * (n > 1)}, "  # add to string
 
                     # Write results
@@ -302,7 +302,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
 
         #moved logger so it only logs after it's finished with one Image
-        LOGGER.info(f'{s}Done. ({t3 - t2:.3f}s)')
+        #LOGGER.info(f'{s}Done. ({t3 - t2:.3f}s)')          #removed Logger
 
     # Print results
     t = tuple(x / seen * 1E3 for x in dt)  # speeds per image
