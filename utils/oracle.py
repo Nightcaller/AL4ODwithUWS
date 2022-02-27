@@ -136,6 +136,9 @@ def autOracle(gtPath, acqPath=None, predPath=None):
             #annotate all images with full time
             hits = torch.zeros(len(gtLabels[i]))
         else:
+            print(i)
+            print(len(gtLabels))
+            print(len(predLabels))
             hits = compare(gtLabels[i], predLabels[i], name)
 
         labelingTime, h, ph, miss = calcLabelingTime(hits)
