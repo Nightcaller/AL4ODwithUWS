@@ -47,7 +47,7 @@ def loadLabels(labelPath, files=None):
             
             labels.append(torch.empty(0))
         
-        print(len(labels))
+       
 
     #returns tensor with box labels; shape [x,y,5] [images, labels, boxes] box => [x,y,x,y, class]
     return labels, files
@@ -133,8 +133,8 @@ def autOracle(gtPath, acqPath=None, predPath=None):
         predLabels = loadLabels(predPath + "/labels", files=fileNames)
         
 
-    len(gtLabels)
-    len(predLabels)
+    print(len(gtLabels))
+    print(len(predLabels))
     #for each gtBB in gtBBs
     for i, name in enumerate(fileNames):
         
