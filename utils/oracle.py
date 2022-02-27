@@ -166,7 +166,7 @@ def autOracle(gtPath, acqPath=None, predPath=None):
     # hit yes but bad => calc time to correct
     # hit no => calc time to redraw
 
-    print("Total:")
+    print("Total: " + str(labelingTimeTotal))
     print ("Hits: " + str(hTotal) + " - " + "Part Hits: " + str(phTotal) + " - " + "Misses: " + str(missTotal))
 
     return labelingTimeTotal
