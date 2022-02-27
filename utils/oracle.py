@@ -131,9 +131,10 @@ def autOracle(gtPath, acqPath=None, predPath=None):
     #load predicted labels
     if(predPath is not None):
         predLabels = loadLabels(predPath + "/labels", files=fileNames)
-        print(fileNames)
+        
 
-
+    len(gtLabels)
+    len(predLabels)
     #for each gtBB in gtBBs
     for i, name in enumerate(fileNames):
         
