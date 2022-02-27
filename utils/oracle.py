@@ -130,7 +130,7 @@ def autOracle(gtPath, acqPath=None, predPath=None):
     
     #load predicted labels
     if(predPath is not None):
-        predLabels = loadLabels(predPath + "/labels", files=fileNames)
+        predLabels, _ = loadLabels(predPath + "/labels", files=fileNames)
         
 
     print(len(gtLabels))
