@@ -54,8 +54,9 @@ def loadLabels(labelPath, files=None):
 def compare(gt, pred):
 
     hits = torch.zeros(len(gt))
-
-
+    print("#####")
+    print(gt)
+    print(pred)
     ious = box_iou(pred[:,:4], gt[:,:4])
 
     for i, iou in enumerate(ious):
