@@ -138,7 +138,7 @@ def autOracle(gtPath, acqPath=None, predPath=None):
         else:
             print(i)
             print(len(gtLabels))
-            print(len(predLabels))
+            print(predLabels)
             hits = compare(gtLabels[i], predLabels[i], name)
 
         labelingTime, h, ph, miss = calcLabelingTime(hits)
