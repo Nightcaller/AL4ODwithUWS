@@ -71,7 +71,7 @@ def compare(gt, pred, name):
 
        
         #check if classes match
-        if (pred[i,4] == gt[index,4]):
+        if (pred[i,4] == gt[index,4] or maxIoU == 0):
             hits[index] = maxIoU
         else:
             #TODO Handle by setting index to 0 and repeat step
