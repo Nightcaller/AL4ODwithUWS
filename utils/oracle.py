@@ -37,12 +37,14 @@ def loadLabels(labelPath, files=None):
             label = []    
 
         if(len(label)):
+            print(label)
             classes = torch.from_numpy(label[:,0])
             boxes = torch.from_numpy(label[:,1:])
             boxes = xywh2xyxy(boxes)
             
             labels.append(torch.cat((boxes, classes[:,None]), -1))                  # labels [x,y,x,y, class]
         else:
+            print(label)
             labels.append(torch.empty(0))
 
     #returns tensor with box labels; shape [x,y,5] [images, labels, boxes] box => [x,y,x,y, class]
@@ -127,7 +129,8 @@ def autOracle(gtPath, acqPath=None, predPath=None):
     #load predicted labels
     if(predPath is not None):
         predLabels = loadLabels(predPath + "/labels", files=fileNames)
-    
+        print(fileNames)
+
 
     #for each gtBB in gtBBs
     for i, name in enumerate(fileNames):
@@ -136,9 +139,6 @@ def autOracle(gtPath, acqPath=None, predPath=None):
             #annotate all images with full time
             hits = torch.zeros(len(gtLabels[i]))
         else:
-            print(i)
-            print(len(gtLabels))
-            print(predLabels)
             hits = compare(gtLabels[i], predLabels[i], name)
 
         labelingTime, h, ph, miss = calcLabelingTime(hits)
