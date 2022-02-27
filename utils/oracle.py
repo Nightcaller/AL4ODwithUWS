@@ -62,18 +62,13 @@ def compare(gt, pred, name):
 
     hits = torch.zeros(len(gt))
     
-    print(pred)
-    print(gt)
     ious = box_iou(pred[:,:4], gt[:,:4])
 
-    print(ious)
+
     for i, iou in enumerate(ious):
         maxIoU = torch.max(iou)
-        index = (iou == maxIoU).nonzero(as_tuple=False)
+        index = (iou == maxIoU).nonzero(as_tuple=True)[0]
 
-        
-        print(iou)
-        print(index)
         #check if classes match
         if (pred[i,4] == gt[index,4]):
             hits[index] = maxIoU
