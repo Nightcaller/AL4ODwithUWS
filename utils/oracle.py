@@ -75,10 +75,6 @@ def compare(gt, pred, name):
             hits[index] = maxIoU
         else:
             #TODO Handle by setting index to 0 and repeat step
-            print(pred[i])
-            print(gt[i])
-
-            print(maxIoU)
             print("Wrong class")
   
     return hits
@@ -105,7 +101,7 @@ def calcLabelingTime(hits):
             miss += 1
             labelingTime += 1.6 + 42              # Redrawing box with quality control (arXiv:1602.08405v3)
 
-    print ("Hits: " + str(h) + " - " + "Part Hits: " + str(ph) + " - " + "Misses: " + str(miss))
+    #print ("Hits: " + str(h) + " - " + "Part Hits: " + str(ph) + " - " + "Misses: " + str(miss))
 
     return labelingTime, h, ph, miss
 
