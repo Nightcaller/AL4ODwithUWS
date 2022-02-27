@@ -62,6 +62,8 @@ def compare(gt, pred, name):
 
     hits = torch.zeros(len(gt))
     
+    print(pred)
+    print(gt)
     ious = box_iou(pred[:,:4], gt[:,:4])
 
     for i, iou in enumerate(ious):
