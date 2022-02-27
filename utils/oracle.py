@@ -57,7 +57,7 @@ def loadLabels(labelPath, files=None):
 #compare GT to prediciton and decide for Supervision Level (Pseudo, low supervision, high supervision )
 def compare(gt, pred, name):
 
-    if(not len(gt)):
+    if(not len(gt) or not len(pred)):
         return []
 
     hits = torch.zeros(len(gt))
