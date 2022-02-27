@@ -43,7 +43,7 @@ def loadLabels(labelPath, files=None):
             
             labels.append(torch.cat((boxes, classes[:,None]), -1))                  # labels [x,y,x,y, class]
         else:
-            labels.append(torch.empty(1))
+            labels.append(torch.empty(0))
 
     #returns tensor with box labels; shape [x,y,5] [images, labels, boxes] box => [x,y,x,y, class]
     return labels, files
