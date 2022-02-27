@@ -51,12 +51,13 @@ def loadLabels(labelPath, files=None):
 
 
 #compare GT to prediciton and decide for Supervision Level (Pseudo, low supervision, high supervision )
-def compare(gt, pred):
+def compare(gt, pred, name):
 
     hits = torch.zeros(len(gt))
     print("#####")
     print(gt)
     print(pred)
+    print(name)
     ious = box_iou(pred[:,:4], gt[:,:4])
 
     for i, iou in enumerate(ious):
@@ -135,7 +136,7 @@ def autOracle(gtPath, acqPath=None, predPath=None):
             #annotate all images with full time
             hits = torch.zeros(len(gtLabels[i]))
         else:
-            hits = compare(gtLabels[i], predLabels[i])
+            hits = compare(gtLabels[i], predLabels[i], name)
 
         labelingTime, h, ph, miss = calcLabelingTime(hits)
 
