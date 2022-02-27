@@ -33,13 +33,14 @@ def loadLabels(labelPath, files=None):
         with open(labelFile) as f:
             label = np.array([x.split() for x in f.read().strip().splitlines()], dtype=np.float32)  # labels [class, x,y,w,h]
             
-        print(label)
-        classes = torch.from_numpy(label[:,0])
-        boxes = torch.from_numpy(label[:,1:])
-        boxes = xywh2xyxy(boxes)
-        
-        labels.append(torch.cat((boxes, classes[:,None]), -1))                                  # labels [x,y,x,y, class]
-
+        if(len(label)):
+            classes = torch.from_numpy(label[:,0])
+            boxes = torch.from_numpy(label[:,1:])
+            boxes = xywh2xyxy(boxes)
+            
+            labels.append(torch.cat((boxes, classes[:,None]), -1))                                  # labels [x,y,x,y, class]
+        else:
+            labels.append(torch.empty(0))
 
     #returns tensor with box labels; shape [x,y,5] [images, labels, boxes] box => [x,y,x,y, class]
     return labels, files
