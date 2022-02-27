@@ -4,10 +4,9 @@ from sklearn.cluster import cluster_optics_dbscan
 import torch
 import numpy as np
 
-
-
-
 from utils.metrics import box_iou
+
+
 
 def random_sampling(): 
 
@@ -103,6 +102,7 @@ def cluster_dbscan(obj):
     
     from scipy.spatial import ConvexHull
 
+    #send to gpu rather than cpu
     points1 = obj[:,:2].cpu().numpy()
     points2 = obj[:,2:4].cpu().numpy()
 
@@ -112,6 +112,7 @@ def cluster_dbscan(obj):
     try:
         u = (ConvexHull(points1).area + ConvexHull(points2).area) / 2
     except:
+        #ConvexHull function randomly throws an unknown exception
         u = 0
         pass
     

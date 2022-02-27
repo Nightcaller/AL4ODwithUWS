@@ -64,7 +64,9 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         hide_conf=False,  # hide confidences
         half=False,  # use FP16 half-precision inference
         dnn=False,  # use OpenCV DNN for ONNX inference
-        dropout=5,
+        dropout=1,
+        al_leastConf=False,
+        al_random=False,
         ):
     source = str(source)
     save_img = not nosave and not source.endswith('.txt')  # save inference images
@@ -101,15 +103,27 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
     vid_path, vid_writer = [None] * bs, [None] * bs
 
 
-#########
-    al = True                               #added
+#########                                        #added 
+    al = False                           
         #activate dropout layers
-    if(dropout>1):                          #added
-        model.apply(apply_dropout)          #added
-    if(al):                                 #added
-        al_rnd, al_u, al_lc = [], [], []
+    if(dropout>1):                          
+        model.apply(apply_dropout) 
+        al_u = []   
+        al = True
+    if(al_random):
+        al_rnd = []
+        al = True
+    if(al_leastConf):
+        al_lc = []  
+        al = True     
+
+    #Overhead for any AL Strategies 
+    #TODO Change to any() 
+    if(al):                                 
         save_acq = str(save_dir / 'acquisition' )
         (save_dir / 'acquisition').mkdir(parents=True, exist_ok=True)
+
+
 ##########
 
 
@@ -126,9 +140,10 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         t2 = time_sync()
         dt[0] += t2 - t1
 
-        # Inference
+        
         predictions = []                           #added
-        # Inference
+        # Inference 
+        #added dropout loop for iference with turned on dropout layers
         for i in range(0,dropout):                       #added
             visualize = increment_path(save_dir / Path(path).stem, mkdir=True) if visualize else False
             pred = model(im, augment=augment, visualize=visualize)
@@ -139,6 +154,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             pred = non_max_suppression(pred, conf_thres, iou_thres, classes, agnostic_nms, max_det=max_det)
             dt[2] += time_sync() - t3
 
+            #saving all inference runs
             predictions.append(pred)                #added
         # Second-stage classifier (optional)
         # pred = utils.general.apply_classifier(pred, classifier_model, im, im0s)
@@ -151,8 +167,8 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         #al_uncertainty = False
 
         # Select random    
-       # if 'al_rnd' in locals():
-       #     al_rnd.append((Path(path).stem, random_sampling()))
+        if 'al_rnd' in locals():
+            al_rnd.append((Path(path).stem, random_sampling()))
 
         if 'al_u' in locals():
             predictions, uAll = uncertainty(predictions, Path(path), imgsz)
@@ -160,11 +176,13 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             u = 0
             if (len(uAll) > 0):
                 u =  max(uAll)    
-            al_u.append((Path(path).stem, u))
+            al_u.append((Path(path).stem, u))  # max uncertainty for every image
+            
+            #TODO make flag
             singleObject = False
 
-       # if 'al_lc' in locals():
-       #     al_lc.append(least_confidence(pred, Path(path)))
+        if 'al_lc' in locals():
+            al_lc.append(least_confidence(pred, Path(path)))
 
 
         #################
@@ -174,9 +192,12 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
         
         im0 = im0s.copy()                           #added
+
+        #TODO quick fix
+        if(dropout <= 1 ):
+            predictions = predictions[0]
         
         # Process predictions
-
         for objN ,prediction in enumerate(predictions):
             if 'al_u' in locals() and singleObject:              #added
                 im0 = im0s.copy()               #added
@@ -220,19 +241,25 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                         #s += f"{n} {names[int(c)]}{'s' * (n > 1)}, "  # add to string
 
                     # Write results
+                    
                     for *xyxy, conf, cls in reversed(det):
-                        if save_txt:  # Write to file
+                        #i == (len(prediction)-1) => so only the mean label is saved 
+                        if save_txt and i == (len(prediction)-1):  # Write to file
                             xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
                             line = (cls, *xywh, conf) if save_conf else (cls, *xywh)  # label format
                             with open(txt_path + '.txt', 'a') as f:
                                 f.write(('%g ' * len(line)).rstrip() % line + '\n')
 
                         if save_img or save_crop or view_img:  # Add bbox to image
+                            
                             c = int(cls)  # integer class
+
+                            # mean label is annotated
                             if(i == (len(prediction)-1) and 'al_u' in locals()):
                                 label = f'{len(prediction)-1} | {conf:.2f}' 
                                 annotator = Annotator(im0, line_width=2, example=str(names))
-                                annotator.box_label(xyxy, label, (0,0,0))
+                                annotator.box_label(xyxy, label, (0,0,0)) #black box
+                            #Dropoutlabels
                             else:
                                 label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
                                 annotator.box_label(xyxy, label, color=colors(c, True))
@@ -288,28 +315,29 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
     
     #added
      #sort & plot & save txt
-    if al:                                               
-        if al_rnd:
-           
+    if al:    
+        #Random                                           
+        if 'al_rnd' in locals():
             al_rnd.sort(key=lambda x:x[1])
             save_text(al_rnd, save_acq, "RandomSampling")
             plot_distribution(al_rnd, save_acq, "RandomSampling", names)
 
-        if al_u:
-          
+        #simple Uncertainty
+        if 'al_u' in locals():
             al_u.sort(key=lambda x:x[1])
             save_text(al_u, save_acq, "DropoutUncertainty")
             plot_distribution(al_u, save_acq, "DropoutUncertainty", names)
 
-        if al_lc:
+        #least Confidence
+        if 'al_lc' in locals():
             save_text(al_lc, save_acq, "LeastConfidence")
             plot_distribution(al_lc, save_acq, classnames=names, type="LeastConfidence")
     ##########
 
 def parse_opt():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'models/2drop2.pt', help='model path(s)')
-    parser.add_argument('--source', type=str, default=ROOT / '/Users/mhpinnovation/Documents/Daniel/Master/datasets/Waymo/split/training/split', help='file/dir/URL/glob, 0 for webcam')
+    parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'models/DropBeforeDetect.pt', help='model path(s)')
+    parser.add_argument('--source', type=str, default=ROOT / 'data/images', help='file/dir/URL/glob, 0 for webcam')
     parser.add_argument('--imgsz', '--img', '--img-size', nargs='+', type=int, default=[640], help='inference size h,w')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.45, help='NMS t threshold')
@@ -334,9 +362,13 @@ def parse_opt():
     parser.add_argument('--half', action='store_true', help='use FP16 half-precision inference')
     parser.add_argument('--dnn', action='store_true', help='use OpenCV DNN for ONNX inference')
 
-    parser.add_argument('--dropout', type=int, default=10, help='activate dropout and generate number of predicitons') #added
-    #parser.add_argument('--rnd_sampling', action='store_true', help='activate random sampling') #added
+##########
+    #added arguments for AL Strategies
+    parser.add_argument('--dropout', type=int, default=1, help='activate dropout and generate number of predicitons') #added
+    parser.add_argument('--al_random', action='store_true', help='activate random acquisition values') #added
+    parser.add_argument('--al_leastConf', action='store_true', help='activate least confidence acquisition values') #added
 
+##########
     opt = parser.parse_args()
     opt.imgsz *= 2 if len(opt.imgsz) == 1 else 1  # expand
     print_args(FILE.stem, opt)
