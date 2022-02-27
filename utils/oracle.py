@@ -134,9 +134,6 @@ def autOracle(gtPath, acqPath=None, predPath=None):
     if(predPath is not None):
         predLabels, _ = loadLabels(predPath + "/labels", files=fileNames)
         
-
-    print(len(gtLabels))
-    print(len(predLabels))
     #for each gtBB in gtBBs
     for i, name in enumerate(fileNames):
         
@@ -166,7 +163,7 @@ def autOracle(gtPath, acqPath=None, predPath=None):
     # hit yes but bad => calc time to correct
     # hit no => calc time to redraw
 
-    print("Total: " + str(labelingTimeTotal))
-    print ("Hits: " + str(hTotal) + " - " + "Part Hits: " + str(phTotal) + " - " + "Misses: " + str(missTotal))
+    print("Total Labeling Time: " + str(labelingTimeTotal))
+    print("Hits: " + str(hTotal) + " - " + "Part Hits: " + str(phTotal) + " - " + "Misses: " + str(missTotal))
 
     return labelingTimeTotal
