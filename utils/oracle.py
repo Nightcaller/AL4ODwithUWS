@@ -75,6 +75,7 @@ def compare(gt, pred, name):
             hits[index] = maxIoU
         else:
             #TODO Handle by setting index to 0 and repeat step
+            print(maxIoU)
             print("Wrong class")
   
     return hits
