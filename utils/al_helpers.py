@@ -75,18 +75,21 @@ def plot_distribution(values, path, type, classnames):
 
 
 # Check expPath for 0,1,2,3,4 experiments with file=results.txt or oracle.txt and plot)
-def plot_results(expPaths, subPaths ,file, savePath, n, colors, xLabel):
+def plot_results(expPaths, subPaths ,file, savePath, n, colors, xLabel, labels):
 
     import os
 
     fig, ax = plt.subplots()
     plots = []
 
-    lasts = []
+    
+    
 
     for j, exp in enumerate(expPaths):
  
         results = []
+        lasts = []
+        lastYs = []
         for dir in subPaths[j]:
             path = exp + "/" + dir + "/" + file   
             
@@ -97,6 +100,7 @@ def plot_results(expPaths, subPaths ,file, savePath, n, colors, xLabel):
                     
 
         if(not results):
+            print(path)
             print("nothing here")
         
             return 
@@ -108,8 +112,11 @@ def plot_results(expPaths, subPaths ,file, savePath, n, colors, xLabel):
         else:
             name = name[0]
 
-        for x in enumerate(results): 
+        for k, x in enumerate(results): 
             lasts.append(x[-1])
+            lastYs.append(len(x) * (k+1))
+            
+
 
         #for i, result in enumerate(results):
         result = sum(results, [])
@@ -119,12 +126,12 @@ def plot_results(expPaths, subPaths ,file, savePath, n, colors, xLabel):
    
         #last = values[-1]
 
-        plots.append(plt.plot( values, color=colors[j], label="Test"))
+        plots.append(plt.plot( values, color=colors[j], label=labels[j]))
         
         
         lastValues = np.array([float(x[n]) for x in lasts])
-        print(lastValues)
-        plt.plot(lastValues, marker="x", color="black")
+        
+        plt.plot(lastYs, lastValues, marker="x", color="black", linestyle="None")
         
 
     ax.legend()

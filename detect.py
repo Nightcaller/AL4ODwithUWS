@@ -274,13 +274,15 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
 
             # Stream results
-            im0 = annotator.result()
+            
             if view_img:
+                im0 = annotator.result()
                 cv2.imshow(str(p), im0)
                 cv2.waitKey(1)  # 1 millisecond
 
             # Save results (image with detections)
             if save_img:
+                im0 = annotator.result()
                 if dataset.mode == 'image':
                     cv2.imwrite(save_path, im0)
                 else:  # 'video' or 'stream'
