@@ -8,7 +8,9 @@ from utils.general import xywh2xyxy
 from utils.metrics import box_iou
 from utils.acquisition import loadFile
 
+
 from utils.al_helpers import annotate_image
+from utils.al_helpers import save_text
 
 #load acq and labels check iou
 
@@ -113,7 +115,7 @@ def calcLabelingTime(hits):
     #1. groundTruth only:   Calculate standard labeling time
     #2. gt + acq:           Calculate labeling time of selected data
     #3. Full:               Calculate labeling time as if a human is given the machine labels and decides of label is hit or not 
-def autOracle(gtPath, acqPath=None, predPath=None):
+def autOracle(gtPath, savePath= None,  acqPath=None, predPath=None):
 
     labelingTimeTotal, hTotal, phTotal, missTotal = 0,0,0,0
 
@@ -163,7 +165,14 @@ def autOracle(gtPath, acqPath=None, predPath=None):
     # hit yes but bad => calc time to correct
     # hit no => calc time to redraw
 
-    print("Total Labeling Time: " + str(labelingTimeTotal))
+    if(os.path.exists(savePath)):
+        saveText = [
+            ("Run,","Time in Hours, Hits, Part Hits, Misses"), 
+            ("0 ," ,str(labelingTimeTotal / 3600) + "," + str(hTotal) + ", " + str(phTotal)+  ", " + str(missTotal) )
+        ] 
+        save_text(saveText,savePath,"oracle")
+
+    print("Total Labeling Time: " + str(labelingTimeTotal / 3600) + " Hours")
     print("Hits: " + str(hTotal) + " - " + "Part Hits: " + str(phTotal) + " - " + "Misses: " + str(missTotal))
 
     return labelingTimeTotal

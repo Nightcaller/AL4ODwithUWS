@@ -56,7 +56,7 @@ def plot_distribution(values, path, type, classnames):
             axs[i-1].set_title('Class: ' + classnames[i-1])   #parse class name
             
         
-        #plt.ylim[0,1]
+        #plt.ylim([0,1])
         plt.savefig(path + "/" +  type + ".jpg")
                
     else:
@@ -72,6 +72,80 @@ def plot_distribution(values, path, type, classnames):
 
 
 
+
+
+# Check expPath for 0,1,2,3,4 experiments with file=results.txt or oracle.txt and plot)
+def plot_results(expPaths, subPaths ,file, savePath, n, colors, xLabel):
+
+    import os
+
+    fig, ax = plt.subplots()
+    plots = []
+
+    lasts = []
+
+    for j, exp in enumerate(expPaths):
+ 
+        results = []
+        for dir in subPaths[j]:
+            path = exp + "/" + dir + "/" + file   
+            
+            if os.path.exists(path):
+                with open(path) as f:
+                    names = f.readline().split(",")
+                    results.append([x.split(",") for x in f.read().strip().splitlines()])
+                    
+
+        if(not results):
+            print("nothing here")
+        
+            return 
+
+        
+        name = names[n].split("/")
+        if(len(name) > 1):
+            name = name[1]
+        else:
+            name = name[0]
+
+        for x in enumerate(results): 
+            lasts.append(x[-1])
+
+        #for i, result in enumerate(results):
+        result = sum(results, [])
+        values = np.array([float(x[n]) for x in result])
+        #epochs = np.array([float(x[0]) for x in result]) + len(values) * i +1  #weg machen
+        #lastY =  len(values) * (i + 1)
+   
+        #last = values[-1]
+
+        plots.append(plt.plot( values, color=colors[j], label="Test"))
+        
+        
+        lastValues = np.array([float(x[n]) for x in lasts])
+        print(lastValues)
+        plt.plot(lastValues, marker="x", color="black")
+        
+
+    ax.legend()
+    fig.suptitle(name, fontsize=18)
+    plt.xlabel(xLabel, fontsize=14)
+    plt.ylabel(name, fontsize=14)
+
+    
+    #plt.ylim([0,1])
+    
+    plt.savefig(savePath + "/" +  name + ".jpg")
+    plt.close()
+
+
+
+
+
+
+
+
+
 #Edit for more Lines 
 def save_text(values, save_dir, fileName):
     save_dir = save_dir + "/" + fileName + ".txt"
@@ -79,6 +153,8 @@ def save_text(values, save_dir, fileName):
         for value in values:
             # make more general 
             f.write( value[0] + " " + str(value[1]) + "\n")
+
+
 
 
 def annotate_image(path, savePath, gtBoxes, predBoxes, ious=None):
