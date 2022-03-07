@@ -333,6 +333,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
         #least Confidence
         if 'al_lc' in locals():
+            al_lc.sort(key=lambda x:x[1], reverse=True)
             save_text(al_lc, save_acq, "LeastConfidence")
             plot_distribution(al_lc, save_acq, classnames=names, type="LeastConfidence")
     ##########

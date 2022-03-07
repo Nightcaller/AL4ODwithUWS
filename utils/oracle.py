@@ -15,7 +15,7 @@ from utils.al_helpers import save_text
 #load acq and labels check iou
 
 
-#TODO: Test 
+
 #load GroundTruth Box corresponding to selected Image
 def loadLabels(labelPath, files=None):
 

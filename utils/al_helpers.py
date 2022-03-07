@@ -42,10 +42,10 @@ def plot_distribution(values, path, type, classnames):
         fig, axs = plt.subplots(len(values[0]) - 1)
         fig.suptitle(type, fontsize=18)
     
-        print("###########")
-        print(len(values[0]))
+        #print("###########")
+        #print(len(values[0]))
 
-        print("###########")
+        #print("###########")
         for i in range(1,len(values[0])):
             values.sort(key=lambda x:x[i])          
             value = np.array([x[i] for x in values])
@@ -114,7 +114,7 @@ def plot_results(expPaths, subPaths ,file, savePath, n, colors, xLabel, labels):
 
         for k, x in enumerate(results): 
             lasts.append(x[-1])
-            lastYs.append(len(x) * (k+1))
+            lastYs.append( (len(x) * (k+1)) -1 )
             
 
 
@@ -125,14 +125,15 @@ def plot_results(expPaths, subPaths ,file, savePath, n, colors, xLabel, labels):
         #lastY =  len(values) * (i + 1)
    
         #last = values[-1]
-
-        plots.append(plt.plot( values, color=colors[j], label=labels[j]))
-        
+        test = np.array([[   0.035823  ,  0.070962 ,   0.094206   ,  0.10682    , 0.11933],[     0.080872  ,    0.1108   ,  0.12543  ,   0.13263  ,   0.13886], [0.16512] ])
+        plots.append(plt.plot(test[j], values, color=colors[j], label=labels[j]))
+        #plots.append(plt.plot( values, color=colors[j], label=labels[j]))
+        #[    0.32781]
         
         lastValues = np.array([float(x[n]) for x in lasts])
-        
-        plt.plot(lastYs, lastValues, marker="x", color="black", linestyle="None")
-        
+        print(lastValues)
+        #plt.plot(lastYs, lastValues, marker="x", color="black", linestyle="None")
+        plt.plot(test[j], lastValues, marker="x", color="black", linestyle="None")
 
     ax.legend()
     fig.suptitle(name, fontsize=18)
@@ -140,7 +141,7 @@ def plot_results(expPaths, subPaths ,file, savePath, n, colors, xLabel, labels):
     plt.ylabel(name, fontsize=14)
 
     
-    #plt.ylim([0,1])
+    #plt.xlim([0.1,0.35])
     
     plt.savefig(savePath + "/" +  name + ".jpg")
     plt.close()
@@ -158,7 +159,7 @@ def save_text(values, save_dir, fileName):
     save_dir = save_dir + "/" + fileName + ".txt"
     with open(save_dir, 'a') as f:
         for value in values:
-            # make more general 
+            
             f.write( value[0] + " " + str(value[1]) + "\n")
 
 
@@ -195,8 +196,3 @@ def annotate_image(path, savePath, gtBoxes, predBoxes, ious=None):
 
     return cv2.imwrite(savePath, image)
 
-
-
-
-def load_labels():
-    return 

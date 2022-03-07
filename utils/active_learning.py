@@ -122,7 +122,8 @@ def cluster_dbscan(obj):
 
 def least_confidence(prediction, path, n=0 ):
 
-    result = [path.stem, 1.0,1.0,1.0,1.0]
+    #result = [path.stem, 1.0,1.0,1.0,1.0]
+    leastConfidence = 1
 
     for i, det in enumerate(prediction):
         for *xyxy, conf, cls in reversed(det):
@@ -131,11 +132,11 @@ def least_confidence(prediction, path, n=0 ):
                 print(cn)
                 return 
 
-            result[cn] = min(float(conf), result[cn])
-            
+            #result[cn] = min(float(conf), result[cn])
+            leastConfidence = min(float(conf), leastConfidence)
 
-    return (result[0],result[1],result[2],result[3],result[4])
-
+    #return (result[0],result[1],result[2],result[3],result[4])
+    return (path.stem, leastConfidence)
 
 
 
