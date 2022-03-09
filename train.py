@@ -285,7 +285,7 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
         diffList = [x-avgMap for x in mapBuffer]
 
         for i, diff in enumerate(diffList):       
-            if diff < -0.002:
+            if diff < -0.01:
                 break      
             if(i == len(diffList)-1):
                 LOGGER.info(f"Terminating Training at {epoch}")
