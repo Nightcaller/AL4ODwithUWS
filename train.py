@@ -281,12 +281,13 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
 
     for epoch in range(start_epoch, epochs):  # epoch ------------------------------------------------------------------
         
-        for i in range(0, len(mapBuffer)-1):
-            diff = mapBuffer[i] - mapBuffer[-1]
+        avgMap = sum(mapBuffer) / len(mapBuffer)
+        diffList = [x-avgMap for x in mapBuffer]
+
+        for i, diff in enumerate(diffList):       
             if diff < -0.01:
-                break
-           
-            if(i == len(mapBuffer)-2):
+                break      
+            if(i == len(diffList)-1):
                 LOGGER.info(f"Terminating Training at {epoch}")
                 termination = True
 
