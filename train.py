@@ -291,7 +291,7 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
                 termination = True
 
         if termination:
-            break
+            return
         
         model.train()
 
