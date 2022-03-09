@@ -282,7 +282,7 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
 
     for epoch in range(start_epoch, epochs):  # epoch ------------------------------------------------------------------
         
-        if((epoch+1)%20) == 0:
+        if((epoch+1)%30) == 0:
             checkTermination = True
 
         if checkTermination:
