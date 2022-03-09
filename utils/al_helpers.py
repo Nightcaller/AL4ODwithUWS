@@ -126,14 +126,14 @@ def plot_results(expPaths, subPaths ,file, savePath, n, colors, xLabel, labels):
    
         #last = values[-1]
         test = np.array([[   0.035823  ,  0.070962 ,   0.094206   ,  0.10682    , 0.11933],[     0.080872  ,    0.1108   ,  0.12543  ,   0.13263  ,   0.13886], [0.16512] ])
-        plots.append(plt.plot(test[j], values, color=colors[j], label=labels[j]))
-        #plots.append(plt.plot( values, color=colors[j], label=labels[j]))
+        #plots.append(plt.plot(test[j], values, color=colors[j], label=labels[j]))
+        plots.append(plt.plot( values, color=colors[j], label=labels[j]))
         #[    0.32781]
         
         lastValues = np.array([float(x[n]) for x in lasts])
         print(lastValues)
-        #plt.plot(lastYs, lastValues, marker="x", color="black", linestyle="None")
-        plt.plot(test[j], lastValues, marker="x", color="black", linestyle="None")
+        plt.plot(lastYs, lastValues, marker="x", color="black", linestyle="None")
+        #plt.plot(test[j], lastValues, marker="x", color="black", linestyle="None")
 
     ax.legend()
     fig.suptitle(name, fontsize=18)

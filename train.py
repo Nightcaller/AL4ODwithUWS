@@ -272,7 +272,27 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
                 f'Using {train_loader.num_workers * WORLD_SIZE} dataloader workers\n'
                 f"Logging results to {colorstr('bold', save_dir)}\n"
                 f'Starting training for {epochs} epochs...')
+    
+    
+    ######### added
+    mapBuffer = [0,0,0,0,1]
+    termination = False
+    #########
+
     for epoch in range(start_epoch, epochs):  # epoch ------------------------------------------------------------------
+        
+        for i in range(0, len(mapBuffer)-1):
+            diff = mapBuffer[i] - mapBuffer[-1]
+            if diff < -0.001:
+                break
+           
+            if(i == len(mapBuffer)-1):
+                termination = True
+
+        if termination:
+            LOGGER.info(f"Terminating Training at {epoch}")
+            break
+        
         model.train()
 
         # Update image weights (optional, single-GPU only)
@@ -370,6 +390,12 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
                                            plot_dropout=True,
                                            #######
                                            )
+
+
+            #results
+            #(mp, mr, map50, map, *(loss.cpu() / len(dataloader)).tolist()), maps, t
+
+            mapBuffer[epoch%len(mapBuffer)] = results[3]
 
             # Update best mAP
             fi = fitness(np.array(results).reshape(1, -1))  # weighted combination of [P, R, mAP@.5, mAP@.5-.95]
