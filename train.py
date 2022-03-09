@@ -287,10 +287,10 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
                 break
            
             if(i == len(mapBuffer)-1):
+                LOGGER.info(f"Terminating Training at {epoch}")
                 termination = True
 
         if termination:
-            LOGGER.info(f"Terminating Training at {epoch}")
             break
         
         model.train()
@@ -395,7 +395,8 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
             #results
             #(mp, mr, map50, map, *(loss.cpu() / len(dataloader)).tolist()), maps, t
 
-            mapBuffer[epoch%len(mapBuffer)] = results[3]
+            mapBuffer[epoch%len(mapBuffer)] = results[2]
+            print(mapBuffer)
 
             # Update best mAP
             fi = fitness(np.array(results).reshape(1, -1))  # weighted combination of [P, R, mAP@.5, mAP@.5-.95]
