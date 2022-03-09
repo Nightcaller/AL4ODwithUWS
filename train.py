@@ -283,7 +283,8 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
         
         for i in range(0, len(mapBuffer)-1):
             diff = mapBuffer[i] - mapBuffer[-1]
-            if diff < -0.001:
+            print(diff)
+            if diff < -0.01:
                 break
            
             if(i == len(mapBuffer)-1):
