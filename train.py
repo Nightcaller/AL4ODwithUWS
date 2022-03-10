@@ -276,7 +276,7 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
     
     ######### added
     mapBuffer = np.zeros(20)
-    mapBuffer[-1] = 1
+    
     x = np.arange(0, 20)
     A = np.vstack([x, np.ones(len(x))]).T
 
@@ -288,7 +288,7 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
         
 
         ###########    
-        if mapBuffer[-1] < 1:
+        if mapBuffer[0] > 0:
             
             #avgMap = sum(mapBuffer) / len(mapBuffer)
             #diffList = [x-avgMap for x in mapBuffer]
