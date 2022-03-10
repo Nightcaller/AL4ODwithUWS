@@ -275,18 +275,13 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
     
     
     ######### added
-    mapBuffer = np.zeros(30)
-    
-    x = np.arange(0, 30)
+    mapBuffer = np.zeros(15)
+    x = np.arange(0, 15)
     A = np.vstack([x, np.ones(len(x))]).T
-
-    #termination = False
-   # checkTermination = False
     #########
 
     for epoch in range(start_epoch, epochs):  # epoch ------------------------------------------------------------------
         
-        print(stopping)
         ###########    
         if mapBuffer[0] > 0 and stopping > -1:  # check gradient after buffer is full
 
@@ -298,8 +293,6 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
                 LOGGER.info(f"Terminating Training at {epoch} because Gradient {m} < {stopping}")
                 return
         ###########
-
-
 
 
         model.train()
@@ -406,7 +399,7 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
 
             #mapBuffer[(epoch-start_epoch)%len(mapBuffer)] = results[3]
             mapBuffer = np.delete(mapBuffer, 0)
-            mapBuffer = np.append(mapBuffer, results[3])
+            mapBuffer = np.append(mapBuffer, 0.5*results[3] + 0.5*results[2] )
             print(mapBuffer)
 
             # Update best mAP
