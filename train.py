@@ -60,9 +60,9 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
           device,
           callbacks
           ):
-    save_dir, epochs, batch_size, weights, single_cls, evolve, data, cfg, resume, noval, nosave, workers, freeze, = \
+    save_dir, epochs, batch_size, weights, single_cls, evolve, data, cfg, resume, noval, nosave, workers, freeze, stopping = \
         Path(opt.save_dir), opt.epochs, opt.batch_size, opt.weights, opt.single_cls, opt.evolve, opt.data, opt.cfg, \
-        opt.resume, opt.noval, opt.nosave, opt.workers, opt.freeze
+        opt.resume, opt.noval, opt.nosave, opt.workers, opt.freeze, opt.stopping
 
     # Directories
     w = save_dir / 'weights'  # weights dir
@@ -286,32 +286,19 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
 
     for epoch in range(start_epoch, epochs):  # epoch ------------------------------------------------------------------
         
-
+        print(stopping)
         ###########    
-        if mapBuffer[0] > 0:
-            
-            #avgMap = sum(mapBuffer) / len(mapBuffer)
-            #diffList = [x-avgMap for x in mapBuffer]
+        if mapBuffer[0] > 0 and stopping > -1:  # check gradient after buffer is full
 
             # least squares stopping
             m, _ = np.linalg.lstsq(A, mapBuffer, rcond=None)[0]
             LOGGER.info(f"Gradient {m}")
 
-            if m < 0.0001: 
-                LOGGER.info(f"Terminating Training at {epoch} because Gradient {m} < 0.00005")
+            if m < stopping: 
+                LOGGER.info(f"Terminating Training at {epoch} because Gradient {m} < {stopping}")
                 return
+        ###########
 
-           # for i, diff in enumerate(diffList):       
-           #     if diff < -0.0001:
-           #         break      
-           #     if(i == len(diffList)-1):
-           #         
-           #         termination = True
-
-          #  if termination:
-           #     return
-                
-        ############    
 
 
 
@@ -530,6 +517,9 @@ def parse_opt(known=False):
     parser.add_argument('--save-period', type=int, default=-1, help='Save checkpoint every x epochs (disabled if < 1)')
     parser.add_argument('--local_rank', type=int, default=-1, help='DDP parameter, do not modify')
 
+    #AL arguments
+    parser.add_argument('--stopping', type=float, default=-1.0, help='early stopping threshold')
+    
     # Weights & Biases arguments
     parser.add_argument('--entity', default=None, help='W&B: Entity')
     parser.add_argument('--upload_dataset', nargs='?', const=True, default=False, help='W&B: Upload data, "val" option')
