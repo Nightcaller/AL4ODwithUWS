@@ -275,9 +275,9 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
     
     
     ######### added
-    mapBuffer = np.zeros(20)
+    mapBuffer = np.zeros(30)
     
-    x = np.arange(0, 20)
+    x = np.arange(0, 30)
     A = np.vstack([x, np.ones(len(x))]).T
 
     #termination = False
