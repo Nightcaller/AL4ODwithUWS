@@ -275,30 +275,46 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
     
     
     ######### added
-    mapBuffer = [0,0,0,0,1]
-    termination = False
-    checkTermination = False
+    mapBuffer = np.zeros(20)
+    mapBuffer[-1] = 1
+    x = np.arange(0, 20)
+    A = np.vstack([x, np.ones(len(x))]).T
+
+    #termination = False
+   # checkTermination = False
     #########
 
     for epoch in range(start_epoch, epochs):  # epoch ------------------------------------------------------------------
         
-        if((epoch+1)%30) == 0:
-            checkTermination = True
 
-        if checkTermination:
-            avgMap = sum(mapBuffer) / len(mapBuffer)
-            diffList = [x-avgMap for x in mapBuffer]
+        ###########    
+        if mapBuffer[-1] < 1:
+            
+            #avgMap = sum(mapBuffer) / len(mapBuffer)
+            #diffList = [x-avgMap for x in mapBuffer]
 
-            for i, diff in enumerate(diffList):       
-                if diff < -0.0001:
-                    break      
-                if(i == len(diffList)-1):
-                    LOGGER.info(f"Terminating Training at {epoch}")
-                    termination = True
+            # least squares stopping
+            m, _ = np.linalg.lstsq(A, mapBuffer, rcond=None)[0]
+            LOGGER.info(f"Gradient {m}")
 
-            if termination:
+            if m < 0.0001: 
+                LOGGER.info(f"Terminating Training at {epoch} because Gradient {m} < 0.00005")
                 return
-        
+
+           # for i, diff in enumerate(diffList):       
+           #     if diff < -0.0001:
+           #         break      
+           #     if(i == len(diffList)-1):
+           #         
+           #         termination = True
+
+          #  if termination:
+           #     return
+                
+        ############    
+
+
+
         model.train()
 
         # Update image weights (optional, single-GPU only)
@@ -401,7 +417,7 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
             #results
             #(mp, mr, map50, map, *(loss.cpu() / len(dataloader)).tolist()), maps, t
 
-            mapBuffer[epoch%len(mapBuffer)] = results[2]
+            mapBuffer[(epoch-start_epoch)%len(mapBuffer)] = results[3]
 
             # Update best mAP
             fi = fitness(np.array(results).reshape(1, -1))  # weighted combination of [P, R, mAP@.5, mAP@.5-.95]
