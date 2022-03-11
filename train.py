@@ -289,7 +289,7 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
             m, _ = np.linalg.lstsq(A, mapBuffer, rcond=None)[0]
             LOGGER.info(f"Gradient {m}")
 
-            if m < stopping: 
+            if m < stopping and epoch > 49: 
                 LOGGER.info(f"Terminating Training at {epoch} because Gradient {m} < {stopping}")
                 return
         ###########
@@ -399,7 +399,7 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
 
             #mapBuffer[(epoch-start_epoch)%len(mapBuffer)] = results[3]
             mapBuffer = np.delete(mapBuffer, 0)
-            mapBuffer = np.append(mapBuffer, 0.5*results[3] + 0.5*results[2] )
+            mapBuffer = np.append(mapBuffer, 0.2*results[3] + 0.8*results[2] )
             print(mapBuffer)
 
             # Update best mAP
