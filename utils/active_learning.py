@@ -12,7 +12,7 @@ def random_sampling():
 
     return random.uniform(0, 1)
 
-def uncertainty(predictions, path, imgSize,mode="DBScan" , threshold_iou=0.8):
+def uncertainty(predictions, path, imgSize,mode="Entropy" , threshold_iou=0.5):
     
     objects = []
     uAll = []
@@ -27,7 +27,7 @@ def uncertainty(predictions, path, imgSize,mode="DBScan" , threshold_iou=0.8):
                 continue
 
             #for *xyxy, conf, cls in reversed(det):                       # det[:,:4] => BB ; det[:,4] => Confidence, det[:,5] => Class    
-                
+             
             #for i, object in enumerate(objects):
             #iou = box_iou(object, torch.tensor(xyxy)[None,:])
             if(first):
@@ -44,12 +44,14 @@ def uncertainty(predictions, path, imgSize,mode="DBScan" , threshold_iou=0.8):
                     ious.append(torch.max(box_iou(d[None,:4], object[:,:4])))
 
 
-                index = ious.index(max(ious))
+                #assign BB to max overlap 
+                maxIoU = max(ious)
+                index = ious.index(maxIoU)
 
                 if(sum(ious) == 0):   
                     objects.append(d[None,:])
                     continue
-                if(d[5] == objects[index][0][5]):
+                if(d[5] == objects[index][0][5] and maxIoU >= threshold_iou):   #add to existing cluster
                     objects[index] = torch.cat((objects[index], d[None,:]), 0) 
                 else:
                     objects.append(d[None,:])
@@ -65,8 +67,12 @@ def uncertainty(predictions, path, imgSize,mode="DBScan" , threshold_iou=0.8):
 
         if(mode == "DBScan"):
             uAll.append(cluster_dbscan(obj))
-        
-
+        elif(mode == "Entropy"):
+            uAll.append(cluster_entropy(obj))
+        elif(mode == "Margin"):
+            uAll.append(cluster_margin(obj))
+        elif(mode == "LC"):
+            uAll.append(cluster_lc(obj))
     
 
     return objects, uAll
@@ -118,6 +124,42 @@ def cluster_dbscan(obj):
     
     return u
  
+def cluster_entropy(obj):
+    
+    
+
+    if(obj.size()[0] <=1 ):
+        return 0
+
+
+    probs = obj[:,4].cpu().numpy()
+
+    logProbs = probs * np.log2(probs)
+    numerator = 0 - sum(logProbs)
+    denom = np.log2(probs.size)
+
+    entropy = numerator / denom
+
+    return entropy
+
+
+def cluster_margin(obj):
+    u = 0
+
+    if(obj.size()[0] <=1 ):
+       return 0
+
+    topTwo = torch.topk(obj[:,4],2)
+
+    u = topTwo.values[0] - topTwo.values[1]
+
+    return u
+
+
+def cluster_lc(obj):
+
+
+    return 1 - torch.max(obj[:,4])
 
 
 def least_confidence(prediction, path, n=0 ):
