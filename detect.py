@@ -176,7 +176,6 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             u = 0
             if (len(uAll) > 0):
                 u =  sum(uAll) / len(uAll)
-                print(f'{u}   {Path(path)}')
 
             al_u.append((Path(path).stem, u))  # max uncertainty for every image
             
