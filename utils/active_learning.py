@@ -139,8 +139,8 @@ def cluster_entropy(obj):
 
 
     size = torch.tensor(len(obj[:,4]))
-    
-    print(size.device)
+
+    print(obj[:,4].device)
 
 
     ''' 
