@@ -17,7 +17,8 @@ def uncertainty(predictions, path, imgSize,mode="Entropy" , threshold_iou=0.5):
     objects = []
     uAll = []
     first = True
-     
+    
+    print("Start")
 
     #cluster all predicitions into objects 
     for prediction in predictions:
@@ -57,6 +58,7 @@ def uncertainty(predictions, path, imgSize,mode="Entropy" , threshold_iou=0.5):
                     objects.append(d[None,:])
 
 
+    print("End")
     # Get the mean box from every detected object
     #   and
     # Calc uncertainty by clustering corners and returning the mean of the convex hull area (DBScan)
@@ -138,8 +140,7 @@ def cluster_entropy(obj):
         obj.to('cuda:0')
 
 
-    size = torch.tensor(obj[:,4].shape[0])
-    print(size.device)
+  
 
 
 
@@ -151,12 +152,14 @@ def cluster_entropy(obj):
     denomCPU = np.log2(probs.size)
 
     entropyCPU = numeratorCPU / denomCPU
-    
+    '''
+
+
     if cuda:
         size = torch.tensor(obj[:,4].size()).to('cuda:0')
     else:
         size = torch.tensor(obj[:,4].size())
-    '''
+    
 
     
     logProbs = torch.mul(obj[:,4] ,torch.log2(obj[:,4]))
