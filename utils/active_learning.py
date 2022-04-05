@@ -131,9 +131,12 @@ def cluster_entropy(obj):
     if(obj.size()[0] <=1 ):
         return 0
 
+    print(obj.device)
+
     cuda = torch.cuda.is_available()
     if cuda:
         obj.to('cuda:0')
+
 
 
     ''' 
