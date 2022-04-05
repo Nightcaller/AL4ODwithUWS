@@ -150,6 +150,8 @@ def cluster_entropy(obj):
     logProbs = torch.mul(obj[:,4] ,torch.log2(obj[:,4]))
     numerator = torch.sub(torch.tensor(0), torch.sum(logProbs))
     denom = torch.log2(torch.tensor(obj[:,4].size()))
+    print(numerator.device)
+    print(numerator.denom)
 
     entropy = torch.div(numerator, denom)
     
