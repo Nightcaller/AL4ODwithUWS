@@ -131,12 +131,14 @@ def cluster_entropy(obj):
     if(obj.size()[0] <=1 ):
         return 0
 
-    print(obj.device)
+   
 
     cuda = torch.cuda.is_available()
     if cuda:
         obj.to('cuda:0')
 
+    size = torch.tensor(len(obj[:,4)])
+    print(size.device)
 
 
     ''' 
@@ -152,6 +154,8 @@ def cluster_entropy(obj):
         size = torch.tensor(obj[:,4].size()).to('cuda:0')
     else:
         size = torch.tensor(obj[:,4].size())
+
+
     
     logProbs = torch.mul(obj[:,4] ,torch.log2(obj[:,4]))
     numerator = torch.sub(torch.tensor(0), torch.sum(logProbs))
