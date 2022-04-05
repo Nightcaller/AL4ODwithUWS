@@ -111,6 +111,8 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         model.apply(apply_dropout) 
         al_u = []   
         al = True
+        u_mode = "Margin"
+
     if(al_random):
         al_rnd = []
         al = True
@@ -178,7 +180,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             al_rnd.append((Path(path).stem, random_sampling()))
 
         if 'al_u' in locals():
-            predictions, uAll = uncertainty(predictions, Path(path), imgSize=imgsz, mode="LC")
+            predictions, uAll = uncertainty(predictions, Path(path), imgSize=imgsz, mode=u_mode)
             
             u = 0
             if (len(uAll) > 0):
@@ -336,11 +338,11 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             save_text(al_rnd, save_acq, "RandomSampling")
             plot_distribution(al_rnd, save_acq, "RandomSampling", names)
 
-        #simple Uncertainty
+        #Uncertainty 
         if 'al_u' in locals():
             al_u.sort(key=lambda x:x[1])
-            save_text(al_u, save_acq, "DropoutUncertainty")
-            plot_distribution(al_u, save_acq, "DropoutUncertainty", names)
+            save_text(al_u, save_acq, "Uncertainty + " + u_mode)
+            plot_distribution(al_u, save_acq, "Uncertainty + " + u_mode, names)
 
         #least Confidence
         if 'al_lc' in locals():
