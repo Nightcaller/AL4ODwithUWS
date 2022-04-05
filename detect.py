@@ -131,9 +131,11 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
     # Run inference
     model.warmup(imgsz=(1, 3, *imgsz), half=half)  # warmup
     dt, seen = [0.0, 0.0, 0.0], 0
+
+    ##### added progress bar over dataset
     pbar = enumerate(dataset)
-    #
-    pbar = tqdm(pbar, total=len(dataset), bar_format='{l_bar}{bar:10}{r_bar}{bar:-10b}')  # progress bar
+    pbar = tqdm(pbar, total=len(dataset), bar_format='{l_bar}{bar:10}{r_bar}{bar:-10b}') 
+    ######
 
     for i, (path, im, im0s, vid_cap, s) in pbar:
         t1 = time_sync()
@@ -176,7 +178,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             al_rnd.append((Path(path).stem, random_sampling()))
 
         if 'al_u' in locals():
-            predictions, uAll = uncertainty(predictions, Path(path), imgSize=imgsz, mode="Entropy")
+            predictions, uAll = uncertainty(predictions, Path(path), imgSize=imgsz, mode="LC")
             
             u = 0
             if (len(uAll) > 0):
