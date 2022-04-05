@@ -177,6 +177,9 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             if (len(uAll) > 0):
                 u =  sum(uAll) / len(uAll)
 
+                print(f'{u}  {Path(path)}')
+
+
             al_u.append((Path(path).stem, u))  # max uncertainty for every image
             
             #TODO make flag
@@ -369,7 +372,7 @@ def parse_opt():
 
 ##########
     #added arguments for AL Strategies
-    parser.add_argument('--dropout', type=int, default=10, help='activate dropout and generate number of predicitons') #added
+    parser.add_argument('--dropout', type=int, default=50, help='activate dropout and generate number of predicitons') #added
     parser.add_argument('--al_random', action='store_true', help='activate random acquisition values') #added
     parser.add_argument('--al_leastConf', action='store_true', help='activate least confidence acquisition values') #added
 ##########
