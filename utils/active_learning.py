@@ -145,13 +145,15 @@ def cluster_entropy(obj):
 
     entropyCPU = numeratorCPU / denomCPU
     '''
-    size = torch.tensor(obj[:,4].size()).to('cuda:0')
+    if cuda:
+        size = torch.tensor(obj[:,4].size()).to('cuda:0')
+    else:
+        size = torch.tensor(obj[:,4].size())
     
     logProbs = torch.mul(obj[:,4] ,torch.log2(obj[:,4]))
     numerator = torch.sub(torch.tensor(0), torch.sum(logProbs))
     denom = torch.log2(size)
-    print(size.device)
-    print(denom.device)
+
 
     entropy = torch.div(numerator, denom)
     

@@ -21,6 +21,7 @@ from pathlib import Path
 import cv2
 import torch
 import torch.backends.cudnn as cudnn
+from tqdm import tqdm
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLOv5 root directory
@@ -130,7 +131,11 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
     # Run inference
     model.warmup(imgsz=(1, 3, *imgsz), half=half)  # warmup
     dt, seen = [0.0, 0.0, 0.0], 0
-    for path, im, im0s, vid_cap, s in dataset:
+    pbar = enumerate(dataset)
+    #
+    pbar = tqdm(pbar, total=len(dataset), bar_format='{l_bar}{bar:10}{r_bar}{bar:-10b}')  # progress bar
+
+    for i, (path, im, im0s, vid_cap, s) in pbar:
         t1 = time_sync()
         im = torch.from_numpy(im).to(device)
         im = im.half() if half else im.float()  # uint8 to fp16/32
@@ -177,7 +182,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             if (len(uAll) > 0):
                 u =  sum(uAll) / len(uAll)
 
-                print(f'{u}  {Path(path)}')
+                #print(f'{u}  {Path(path)}')
 
 
             al_u.append((Path(path).stem, u))  # max uncertainty for every image
@@ -372,7 +377,7 @@ def parse_opt():
 
 ##########
     #added arguments for AL Strategies
-    parser.add_argument('--dropout', type=int, default=50, help='activate dropout and generate number of predicitons') #added
+    parser.add_argument('--dropout', type=int, default=20, help='activate dropout and generate number of predicitons') #added
     parser.add_argument('--al_random', action='store_true', help='activate random acquisition values') #added
     parser.add_argument('--al_leastConf', action='store_true', help='activate least confidence acquisition values') #added
 ##########
