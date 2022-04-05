@@ -12,13 +12,16 @@ def random_sampling():
 
     return random.uniform(0, 1)
 
+
+
+
+# BB Clustering Hungarian Method
 def uncertainty(predictions, path, imgSize,mode="Entropy" , threshold_iou=0.5):
     
     objects = []
     uAll = []
     first = True
     
-    print("Start")
 
     #cluster all predicitions into objects 
     for prediction in predictions:
@@ -29,8 +32,7 @@ def uncertainty(predictions, path, imgSize,mode="Entropy" , threshold_iou=0.5):
 
             #for *xyxy, conf, cls in reversed(det):                       # det[:,:4] => BB ; det[:,4] => Confidence, det[:,5] => Class    
              
-            #for i, object in enumerate(objects):
-            #iou = box_iou(object, torch.tensor(xyxy)[None,:])
+            
             if(first):
                for d in det:
                    objects.append(d[None,:])
@@ -58,7 +60,6 @@ def uncertainty(predictions, path, imgSize,mode="Entropy" , threshold_iou=0.5):
                     objects.append(d[None,:])
 
 
-    print("End")
     # Get the mean box from every detected object
     #   and
     # Calc uncertainty by clustering corners and returning the mean of the convex hull area (DBScan)
@@ -127,21 +128,10 @@ def cluster_dbscan(obj):
     return u
  
 def cluster_entropy(obj):
-    
-    
+      
 
     if(obj.size()[0] <=1 ):
         return 0
-
-   
-
-    cuda = torch.cuda.is_available()
-    if cuda:
-        obj.to('cuda:0')
-
-
-  
-
 
 
     ''' 
@@ -154,19 +144,16 @@ def cluster_entropy(obj):
     entropyCPU = numeratorCPU / denomCPU
     '''
 
-
+    cuda = torch.cuda.is_available()
     if cuda:
         size = torch.tensor(obj[:,4].size()).to('cuda:0')
     else:
         size = torch.tensor(obj[:,4].size())
     
 
-    
     logProbs = torch.mul(obj[:,4] ,torch.log2(obj[:,4]))
     numerator = torch.sub(torch.tensor(0), torch.sum(logProbs))
     denom = torch.log2(size)
-
-    print(denom.device)
 
     entropy = torch.div(numerator, denom)
     
