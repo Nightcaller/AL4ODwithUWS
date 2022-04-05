@@ -137,7 +137,9 @@ def cluster_entropy(obj):
     if cuda:
         obj.to('cuda:0')
 
-    size = torch.tensor(len(obj[:,4)])
+
+    size = torch.tensor(len(obj[:,4]))
+    
     print(size.device)
 
 
