@@ -25,7 +25,7 @@ def uncertainty(predictions, path, imgSize,mode="Entropy" , threshold_iou=0.5):
 
     #cluster all predicitions into objects 
     for prediction in predictions:
-        for i, det in enumerate(prediction):
+        for det in prediction:
 
             if(len(det) == 0):
                 continue
