@@ -15,7 +15,7 @@ def random_sampling():
 
 
 
-# BB Clustering Hungarian Method
+# BB Clustering by Hungarian Method
 def uncertainty(predictions, path, imgSize,mode="Entropy" , threshold_iou=0.5):
     
     objects = []
@@ -29,9 +29,7 @@ def uncertainty(predictions, path, imgSize,mode="Entropy" , threshold_iou=0.5):
 
             if(len(det) == 0):
                 continue
-
             #for *xyxy, conf, cls in reversed(det):                       # det[:,:4] => BB ; det[:,4] => Confidence, det[:,5] => Class    
-             
             
             if(first):
                for d in det:

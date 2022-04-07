@@ -335,19 +335,19 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         #Random                                           
         if 'al_rnd' in locals():
             al_rnd.sort(key=lambda x:x[1])
-            save_text(al_rnd, save_acq, "RandomSampling")
+            save_text(al_rnd, save_acq, "uncertainty")
             plot_distribution(al_rnd, save_acq, "RandomSampling", names)
 
         #Uncertainty 
         if 'al_u' in locals():
             al_u.sort(key=lambda x:x[1])
-            save_text(al_u, save_acq, "Uncertainty + " + u_mode)
+            save_text(al_u, save_acq, "uncertainty")
             plot_distribution(al_u, save_acq, "Uncertainty + " + u_mode, names)
 
         #least Confidence
         if 'al_lc' in locals():
             al_lc.sort(key=lambda x:x[1], reverse=True)
-            save_text(al_lc, save_acq, "LeastConfidence")
+            save_text(al_lc, save_acq, "uncertainty")
             plot_distribution(al_lc, save_acq, classnames=names, type="LeastConfidence")
     ##########
 
