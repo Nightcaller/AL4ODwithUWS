@@ -230,7 +230,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                 p = Path(p)  # to Path
 
                 if 'al_u' in locals() and singleObject:
-                    save_path = str(save_dir) + "/" + p.stem + "_" + str(objN) + ".jpg"  # im.jpg
+                    save_path = str(save_dir) + "/" + p.stem + "_" + str(objN) + ".jpg"  # one image per Object
                 else:
                     save_path = str(save_dir / p.name)  # im.jpg
 
@@ -381,7 +381,7 @@ def parse_opt():
 
 ##########
     #added arguments for AL Strategies
-    parser.add_argument('--dropout', type=int, default=20, help='activate dropout and generate number of predicitons') #added
+    parser.add_argument('--dropout', type=int, default=1, help='activate dropout and generate number of predicitons') #added
     parser.add_argument('--al_random', action='store_true', help='activate random acquisition values') #added
     parser.add_argument('--al_leastConf', action='store_true', help='activate least confidence acquisition values') #added
 ##########

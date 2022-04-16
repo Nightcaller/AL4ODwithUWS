@@ -16,7 +16,7 @@ def random_sampling():
 
 
 # BB Clustering by Hungarian Method
-def uncertainty(predictions, path, imgSize,mode="Entropy" , threshold_iou=0.5):
+def uncertainty(predictions, path, imgSize,mode="Entropy" , threshold_iou=0.3):
     
     objects = []
     uAll = []
