@@ -60,9 +60,9 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
           device,
           callbacks
           ):
-    save_dir, epochs, batch_size, weights, single_cls, evolve, data, cfg, resume, noval, nosave, workers, freeze, stopping = \
+    save_dir, epochs, batch_size, weights, single_cls, evolve, data, cfg, resume, noval, nosave, workers, freeze, stopping, fixedStop = \
         Path(opt.save_dir), opt.epochs, opt.batch_size, opt.weights, opt.single_cls, opt.evolve, opt.data, opt.cfg, \
-        opt.resume, opt.noval, opt.nosave, opt.workers, opt.freeze, opt.stopping
+        opt.resume, opt.noval, opt.nosave, opt.workers, opt.freeze, opt.stopping, opt.fixedStop
 
     # Directories
     w = save_dir / 'weights'  # weights dir
@@ -282,10 +282,17 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
 
     for epoch in range(start_epoch, epochs):  # epoch ------------------------------------------------------------------
         
+
+        if mapBuffer[0] > 0 and epoch%50 == 0 and fixedStop:
+            LOGGER.info(f"Terminating Training at FixedStop Epoch: {epoch}")
+            return
+
         ###########    
         if mapBuffer[0] > 0 and stopping > -1:  # check gradient after buffer is full
 
+           
             # least squares stopping
+            
             m, _ = np.linalg.lstsq(A, mapBuffer, rcond=None)[0]
             LOGGER.info(f"Gradient {m}")
 
@@ -512,6 +519,7 @@ def parse_opt(known=False):
 
     #AL arguments
     parser.add_argument('--stopping', type=float, default=-1.0, help='early stopping threshold')
+    parser.add_argument('--fixedStop', action='store_true', help='fixed stopping at 50 epochs')
     
     # Weights & Biases arguments
     parser.add_argument('--entity', default=None, help='W&B: Entity')

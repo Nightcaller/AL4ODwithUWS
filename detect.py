@@ -159,12 +159,13 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             t3 = time_sync()
             dt[1] += t3 - t2
 
-            # NMS
-            pred = non_max_suppression(pred, conf_thres, iou_thres, classes, agnostic_nms, max_det=max_det)
+            # NMS added returning class confidences for each class
+            pred, cls_confs = non_max_suppression(pred, conf_thres, iou_thres, classes, agnostic_nms, max_det=max_det)
             dt[2] += time_sync() - t3
 
             #saving all inference runs
             predictions.append(pred)                #added
+            
         # Second-stage classifier (optional)
         # pred = utils.general.apply_classifier(pred, classifier_model, im, im0s)
 

@@ -179,6 +179,7 @@ def cluster_lc(obj):
     return 1 - torch.max(obj[:,4])
 
 
+#class agnostic least confidence
 def least_confidence(prediction, path, n=0 ):
 
     #result = [path.stem, 1.0,1.0,1.0,1.0]
