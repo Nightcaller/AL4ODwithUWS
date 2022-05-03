@@ -29,23 +29,36 @@ def moveSelection(imageNames, sourceDir, targetDir):
 
 #acqSource, Move From, To, How much percent, pickFrom (top,bot,mid), AL Strat (DropoutUncertainty, Random, leastConfidence)
 def selection(acqSource, source, target, threshold, modes, acqType):
+    from bisect import bisect_left, bisect_right
 
     acq = loadFile(acqSource + "/" + acqType + ".txt")
 
     selection = []
     acqN = len(acq)
-    
-    #topQuantil = 0
-    #botQuantil = acq[-1] * (1-threshold)
 
-    quantil = int(acqN * threshold)
-   
+    valuesWithZero = [float(a[1]) for a in selection]
+    values = [float(a[1]) for a in selection if float(a[1]) != 0]
+    
+
+    topQuantil = values[0] * (1+threshold)
+    topIndex = bisect_left(valuesWithZero, topQuantil)
+    smallestValueIndex = valuesWithZero.index(values[0])
+    #
+    botQuantil = valuesWithZero[-1] * (1-threshold)
+    botIndex = bisect_left(valuesWithZero, botQuantil)
+
+    #quantil = int(acqN * threshold)
+    print("Selection from : "  str(acqN))
     if any("top" in s for s in modes):
-        #TODO: Filter out zeros in acq cause those images are empty and not interesting at all
-        selection = acq[:quantil]
-        print("top")
-    elif any("bot" in s for s in modes):
-        selection = acq[acqN-quantil:]
+        
+        selection = acq[smallestValueIndex:topIndex]
+        print("TOP: " + str(topIndex-smallestValueIndex))
+
+    if any("bot" in s for s in modes):
+        selection += acq[botIndex:]
+        print("BOT: " + str(acqN-botIndex))
+    
+    
     
    
     #save names in file selection.txt
