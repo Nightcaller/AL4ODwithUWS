@@ -34,9 +34,12 @@ def selection(acqSource, source, target, threshold, modes, acqType):
 
     selection = []
     acqN = len(acq)
+    
+    #topQuantil = 0
+    #botQuantil = acq[-1] * (1-threshold)
+
     quantil = int(acqN * threshold)
-    print(quantil)
-    print(acq)
+   
     if any("top" in s for s in modes):
         #TODO: Filter out zeros in acq cause those images are empty and not interesting at all
         selection = acq[:quantil]
@@ -44,7 +47,7 @@ def selection(acqSource, source, target, threshold, modes, acqType):
     elif any("bot" in s for s in modes):
         selection = acq[acqN-quantil:]
     
-    print(selection)
+   
     #save names in file selection.txt
     save_text(selection, acqSource, "selection")
 

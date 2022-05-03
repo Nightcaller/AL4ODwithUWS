@@ -664,6 +664,7 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
 
     t = time.time()
     output = [torch.zeros((0, 6), device=prediction.device)] * prediction.shape[0]
+    output_cls_confs = [torch.zeros((0, nc), device=prediction.device)] * prediction.shape[0]
     
     for xi, x in enumerate(prediction):  # image index, image inference
         # Apply constraints
@@ -728,11 +729,12 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
                 i = i[iou.sum(1) > 1]  # require redundancy
 
         output[xi] = x[i]
+        output_cls_confs[xi] = cls_confs[i]
         if (time.time() - t) > time_limit:
             print(f'WARNING: NMS time limit {time_limit}s exceeded')
             break  # time limit exceeded
 
-    return output, cls_confs[i]
+    return output, output_cls_confs
 
 
 def strip_optimizer(f='best.pt', s=''):  # from utils.general import *; strip_optimizer()

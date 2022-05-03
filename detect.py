@@ -170,8 +170,6 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         # pred = utils.general.apply_classifier(pred, classifier_model, im, im0s)
 
 
-        
-    
         #added
         #rnd_sampling = True
         #al_uncertainty = False

@@ -404,10 +404,11 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
             #results
             #(mp, mr, map50, map, *(loss.cpu() / len(dataloader)).tolist()), maps, t
 
-            #mapBuffer[(epoch-start_epoch)%len(mapBuffer)] = results[3]
+            ############# added
             mapBuffer = np.delete(mapBuffer, 0)
             mapBuffer = np.append(mapBuffer, 0.2*results[3] + 0.8*results[2] )
-            print(mapBuffer)
+            #print(mapBuffer)
+            #############
 
             # Update best mAP
             fi = fitness(np.array(results).reshape(1, -1))  # weighted combination of [P, R, mAP@.5, mAP@.5-.95]
