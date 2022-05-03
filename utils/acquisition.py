@@ -48,7 +48,7 @@ def selection(acqSource, source, target, threshold, modes, acqType):
     botIndex = bisect_left(valuesWithZero, botQuantil)
 
     #quantil = int(acqN * threshold)
-    print("Selection from : "  str(acqN))
+    print("Selection from : " + str(acqN))
     if any("top" in s for s in modes):
         
         selection = acq[smallestValueIndex:topIndex]
