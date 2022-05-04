@@ -36,8 +36,8 @@ def selection(acqSource, source, target, threshold, modes, acqType):
     selection = []
     acqN = len(acq)
 
-    valuesWithZero = [float(a[1]) for a in selection]
-    values = [float(a[1]) for a in selection if float(a[1]) != 0]
+    valuesWithZero = [float(a[1]) for a in acq]
+    values = [float(a[1]) for a in acq if float(a[1]) != 0]
     
 
     topQuantil = values[0] * (1+threshold)
