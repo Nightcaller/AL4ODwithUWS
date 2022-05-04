@@ -383,7 +383,7 @@ def parse_opt():
     parser.add_argument('--dropout', type=int, default=1, help='activate dropout and generate number of predicitons') #added
     parser.add_argument('--al_random', action='store_true', help='activate random acquisition values') #added
     parser.add_argument('--al_leastConf', action='store_true', help='activate least confidence acquisition values') #added
-    parser.add_argument('--al', default='random', help='activate least confidence acquisition values') #added
+    #parser.add_argument('--al', default='random', help='activate least confidence acquisition values') #added
 ##########
 
     opt = parser.parse_args()
