@@ -29,17 +29,19 @@ def moveSelection(imageNames, sourceDir, targetDir):
 
 #acqSource, Move From, To, How much percent, pickFrom (top,bot,mid), AL Strat (DropoutUncertainty, Random, leastConfidence)
 def selection(acqSource, source, target, threshold, modes, acqType):
-    from bisect import bisect_left, bisect_right
+    from bisect import bisect_left
 
     acq = loadFile(acqSource + "/" + acqType + ".txt")
 
     selection = []
     acqN = len(acq)
 
+    print(acq)
+
     valuesWithZero = [float(a[1]) for a in acq]
     values = [float(a[1]) for a in acq if float(a[1]) != 0]
     
-
+    #TODO: Set maximum acq size
     topQuantil = values[0] * (1+threshold)
     topIndex = bisect_left(valuesWithZero, topQuantil)
     smallestValueIndex = valuesWithZero.index(values[0])
