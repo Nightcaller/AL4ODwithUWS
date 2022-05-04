@@ -36,7 +36,7 @@ def selection(acqSource, source, target, threshold, modes, acqType):
     selection = []
     acqN = len(acq)
 
-    print(acq)
+    print(acq) 
 
     valuesWithZero = [float(a[1]) for a in acq]
     values = [float(a[1]) for a in acq if float(a[1]) != 0]
