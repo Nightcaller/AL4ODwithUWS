@@ -202,6 +202,9 @@ def annotate_image(path, savePath, gtBoxes, predBoxes, ious=None):
 
 def gaussian_noise(image, level = 1):
 
+    print(image.device)
+    print(level.device)
+    print(torch.randn(image.size()))
     image = image + torch.randn(image.size()) * level / 255.0
     return image
 
