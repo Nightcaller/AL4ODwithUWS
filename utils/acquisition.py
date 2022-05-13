@@ -28,37 +28,45 @@ def moveSelection(imageNames, sourceDir, targetDir):
 
 
 #acqSource, Move From, To, How much percent, pickFrom (top,bot,mid), AL Strat (DropoutUncertainty, Random, leastConfidence)
-def selection(acqSource, source, target, threshold, modes, acqType):
-    from bisect import bisect_left
+def selection(acqSource, souacrce, target, threshold, modes):
+    from bisect import bisect_left, bisect_right
 
-    acq = loadFile(acqSource + "/" + acqType + ".txt")
+    acq = loadFile(acqSource + "/uncertainty.txt")
 
     selection = []
     acqN = len(acq)
-
-    print(acq) 
-
+    acqMax = int(acqN * threshold)
+    
     valuesWithZero = [float(a[1]) for a in acq]
     values = [float(a[1]) for a in acq if float(a[1]) != 0]
-    
-    #TODO: Set maximum acq size
-    topQuantil = values[0] * (1+threshold)
-    topIndex = bisect_left(valuesWithZero, topQuantil)
+
+    quantil = max(values) * threshold
+   
+
+   
+    sslQuantil = values[0] + quantil 
+    alQuantil = values[-1] - quantil 
+
+    sslIndex = bisect_left(valuesWithZero, sslQuantil)
     smallestValueIndex = valuesWithZero.index(values[0])
-    #
-    botQuantil = valuesWithZero[-1] * (1-threshold)
-    botIndex = bisect_left(valuesWithZero, botQuantil)
+ 
+    alIndex = bisect_left(valuesWithZero, alQuantil)
 
-    #quantil = int(acqN * threshold)
     print("Selection from : " + str(acqN))
-    if any("top" in s for s in modes):
+    if any("ssl" in s for s in modes):
         
-        selection = acq[smallestValueIndex:topIndex]
-        print("TOP: " + str(topIndex-smallestValueIndex))
+        if (sslIndex-smallestValueIndex > acqMax):
+            sslIndex = smallestValueIndex + acqMax
 
-    if any("bot" in s for s in modes):
-        selection += acq[botIndex:]
-        print("BOT: " + str(acqN-botIndex))
+        selection = acq[smallestValueIndex:sslIndex]
+        print("Pseudo Labeling: " + str(sslIndex-smallestValueIndex))
+
+    if any("al" in s for s in modes):
+        if(acqN-alIndex > acqMax):
+            alIndex = acqN-acqMax
+
+        selection += acq[alIndex:]
+        print("Active Learning: " + str(acqN-alIndex))
     
     
     
@@ -72,9 +80,9 @@ def selection(acqSource, source, target, threshold, modes, acqType):
     
     
 
-    success = moveSelection(selection, source, target)
+    #success = moveSelection(selection, source, target)
 
-    return success
+    #return success
 
 
 

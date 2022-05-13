@@ -8,20 +8,25 @@ from utils.metrics import box_iou
 
 
 
+
+
+
 def random_sampling(): 
 
     return random.uniform(0, 1)
 
+#class agnostic least confidence
+def least_confidence(prediction):
 
+    return float(1 - torch.max(prediction[0][:,4]))
 
 
 # BB Clustering by Hungarian Method
-def uncertainty(predictions, path, imgSize,mode="Entropy" , threshold_iou=0.3):
+def uncertainty(predictions, mode="DBScan" , threshold_iou=0.3):
     
     objects = []
     uAll = []
     first = True
-    
 
     #cluster all predicitions into objects 
     for prediction in predictions:
@@ -179,25 +184,59 @@ def cluster_lc(obj):
     return 1 - torch.max(obj[:,4])
 
 
-#class agnostic least confidence
-def least_confidence(prediction, path, n=0 ):
-
-    #result = [path.stem, 1.0,1.0,1.0,1.0]
-    leastConfidence = 1
-
-    for i, det in enumerate(prediction):
-        for *xyxy, conf, cls in reversed(det):
-            cn = int(cls) + 1           #classnumber
-            if(cn>4):                   #wrong model
-                print(cn)
-                return 
-
-            #result[cn] = min(float(conf), result[cn])
-            leastConfidence = min(float(conf), leastConfidence)
-
-    #return (result[0],result[1],result[2],result[3],result[4])
-    return (path.stem, leastConfidence)
 
 
 
+
+def location_stability(predictions):
+
+    objects = []
+    first = True
+    ls = []
+    count = []
+
+    #cluster all predicitions into objects 
+    for prediction in predictions:
+        for det in prediction:
+
+           
+            #for *xyxy, conf, cls in reversed(det):                       # det[:,:4] => BB ; det[:,4] => Confidence, det[:,5] => Class    
+            
+            # initial reference boxes without noise (B0)
+            if(first): 
+                if(len(det) == 0):
+                    return 0
+                for box in det:
+                    objects.append(box[None,:])
+                    ls.append(0)
+                    count.append(0)
+                first = False
+                continue
+
+            if(len(det) == 0): 
+                continue
+
+            # enumerate corresponding boxes with noise C(B0) and sum the iou(B0,C(B0)) 
+            for i, box in enumerate(det):
+                ious = []
+                for object in objects:
+                    ious.append(torch.max(box_iou(box[None,:4], object[:,:4])))
+
+
+                #assign BB to max overlap 
+                maxIoU = max(ious)
+                index = ious.index(maxIoU) #index of corresponding box
+
+                ls[index] += maxIoU
+                count[index] += 1
+    
+    
+    for i, _ in enumerate(ls):
+        if count[i] > 0:
+            ls[i] = ls[i] / count[i]
+
+    sumB0P = sum((x[0][4]*ls[i]) for i, x in enumerate(objects))
+    sumP = sum(x[0][4] for x in objects)
+           
+    return 1 - sumB0P/sumP
 

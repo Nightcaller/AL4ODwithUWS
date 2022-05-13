@@ -4,6 +4,9 @@ import cv2
 from utils.plots import Annotator
 import torch
 
+import torchvision.transforms.functional as F
+from utils.metrics import box_iou
+
 
 #depricated
 '''
@@ -160,7 +163,7 @@ def save_text(values, save_dir, fileName):
     with open(save_dir, 'a') as f:
         for value in values:
             
-            f.write( value[0] + " " + str(value[1]) + "\n")
+            f.write( value[0] + " " + str(float(value[1])) + "\n")
 
 
 
@@ -195,4 +198,11 @@ def annotate_image(path, savePath, gtBoxes, predBoxes, ious=None):
         annotator.box_label(box[:4]*gn,label , (186,0,0))
 
     return cv2.imwrite(savePath, image)
+
+
+def gaussian_noise(image, level = 1):
+
+    image = image + torch.randn(image.size()) * level / 255.0
+    return image
+
 

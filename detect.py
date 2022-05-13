@@ -36,8 +36,8 @@ from utils.general import (LOGGER, check_file, check_img_size, check_imshow, che
 from utils.plots import Annotator, colors, save_one_box
 from utils.torch_utils import select_device, time_sync, apply_dropout
 
-from utils.active_learning import random_sampling, uncertainty, least_confidence
-from utils.al_helpers import save_text, plot_distribution
+from utils.active_learning import random_sampling, uncertainty, least_confidence, location_stability
+from utils.al_helpers import save_text, plot_distribution, gaussian_noise
 
 @torch.no_grad()
 def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
@@ -65,9 +65,10 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         hide_conf=False,  # hide confidences
         half=False,  # use FP16 half-precision inference
         dnn=False,  # use OpenCV DNN for ONNX inference
-        dropout=1,
-        al_leastConf=False,
-        al_random=False,
+      #  dropout=1,
+      #  al_leastConf=False,
+       # al_random=False,
+        al='none',
         ):
     source = str(source)
     save_img = not nosave and not source.endswith('.txt')  # save inference images
@@ -104,27 +105,27 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
     vid_path, vid_writer = [None] * bs, [None] * bs
 
 
-#########                                        #added 
-    al = False                           
-        #activate dropout layers
-    if(dropout>1):                          
-        model.apply(apply_dropout) 
-        al_u = []   
-        al = True
-        u_mode = "Margin"
 
-    if(al_random):
-        al_rnd = []
-        al = True
-    if(al_leastConf):
-        al_lc = []  
-        al = True     
+    
+#########                                        #added 
+    inferences = 1                 
+        #activate dropout layers
+   # if(dropout>1):
+    #    model.apply(apply_dropout) 
+    #    inferences = dropout
+        
+    if al == "dropout":
+        model.apply(apply_dropout) 
+        inferences = 10
 
     #Overhead for any AL Strategies 
-    #TODO Change to any() 
-    if(al):                                 
+    if al == "ls":
+        inferences = 6
+   
+    if al != "none":                                
         save_acq = str(save_dir / 'acquisition' )
         (save_dir / 'acquisition').mkdir(parents=True, exist_ok=True)
+        al_u = []
 
 
 ##########
@@ -151,9 +152,16 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
         
         predictions = []                           #added
+        if al == "ls":
+            im_copy = im
         # Inference 
         #added dropout loop for iference with turned on dropout layers
-        for i in range(0,dropout):                       #added
+        for i in range(0,inferences):                       #added
+            if al == "random":
+                break
+            if al == "ls":
+                im = gaussian_noise(im_copy, 8 * i)
+
             visualize = increment_path(save_dir / Path(path).stem, mkdir=True) if visualize else False
             pred = model(im, augment=augment, visualize=visualize)
             t3 = time_sync()
@@ -164,7 +172,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             dt[2] += time_sync() - t3
 
             #saving all inference runs
-            predictions.append(pred)                #added
+            predictions.append(pred)            #added
             
         # Second-stage classifier (optional)
         # pred = utils.general.apply_classifier(pred, classifier_model, im, im0s)
@@ -175,11 +183,11 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         #al_uncertainty = False
 
         # Select random    
-        if 'al_rnd' in locals():
-            al_rnd.append((Path(path).stem, random_sampling()))
+        if al == "random":
+            al_u.append((Path(path).stem, random_sampling()))
 
-        if 'al_u' in locals():
-            predictions, uAll = uncertainty(predictions, Path(path), imgSize=imgsz, mode=u_mode)
+        if al == "dropout":
+            predictions, uAll = uncertainty(predictions)
             
             u = 0
             if (len(uAll) > 0):
@@ -187,31 +195,30 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
                 #print(f'{u}  {Path(path)}')
 
-
             al_u.append((Path(path).stem, u))  # max uncertainty for every image
             
             #TODO make flag
             singleObject = False
 
-        if 'al_lc' in locals():
-            al_lc.append(least_confidence(pred, Path(path)))
-
+        if al == "lc":
+            al_u.append((Path(path).stem, least_confidence(pred)))
+        if al == "ls":
+            al_u.append((Path(path).stem, location_stability(predictions)))
 
         #################
 
 
 
 
-        
-        im0 = im0s.copy()                           #added
-
-        #TODO quick fix
-        if(dropout <= 1 ):
+        #added
+        im0 = im0s.copy()                           
+        if(al != "dropout"):
             predictions = predictions[0]
-        
+        ###########
+
         # Process predictions
         for objN ,prediction in enumerate(predictions):
-            if 'al_u' in locals() and singleObject:              #added
+            if al == "dropout" and singleObject:              #added
                 im0 = im0s.copy()               #added
 
             for i, det in enumerate(prediction):  # per image
@@ -228,7 +235,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
                 p = Path(p)  # to Path
 
-                if 'al_u' in locals() and singleObject:
+                if al == "dropout" and singleObject:
                     save_path = str(save_dir) + "/" + p.stem + "_" + str(objN) + ".jpg"  # one image per Object
                 else:
                     save_path = str(save_dir / p.name)  # im.jpg
@@ -267,7 +274,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                             c = int(cls)  # integer class
 
                             # mean label is annotated
-                            if(i == (len(prediction)-1) and 'al_u' in locals()):
+                            if(i == (len(prediction)-1) and  al == "dropout"):
                                 label = f'{len(prediction)-1} | {conf:.2f}' 
                                 annotator = Annotator(im0, line_width=2, example=str(names))
                                 annotator.box_label(xyxy, label, (0,0,0)) #black box
@@ -330,29 +337,35 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
     
     #added
      #sort & plot & save txt
-    if al:    
+    if al != "none":    
         #Random                                           
-        if 'al_rnd' in locals():
-            al_rnd.sort(key=lambda x:x[1])
-            save_text(al_rnd, save_acq, "uncertainty")
-            plot_distribution(al_rnd, save_acq, "RandomSampling", names)
-
-        #Uncertainty 
-        if 'al_u' in locals():
+        if al == "random":
             al_u.sort(key=lambda x:x[1])
             save_text(al_u, save_acq, "uncertainty")
-            plot_distribution(al_u, save_acq, "Uncertainty + " + u_mode, names)
+            plot_distribution(al_u, save_acq, "Random_Sampling", names)
+
+        #Uncertainty 
+        if al == "dropout":
+            al_u.sort(key=lambda x:x[1])
+            save_text(al_u, save_acq, "uncertainty")
+            plot_distribution(al_u, save_acq, "Dropout_Uncertainty", names)
 
         #least Confidence
-        if 'al_lc' in locals():
-            al_lc.sort(key=lambda x:x[1], reverse=True)
-            save_text(al_lc, save_acq, "uncertainty")
-            plot_distribution(al_lc, save_acq, classnames=names, type="LeastConfidence")
+        if al == "lc":
+            al_u.sort(key=lambda x:x[1])
+            save_text(al_u, save_acq, "uncertainty")
+            plot_distribution(al_u, save_acq, classnames=names, type="Least_Confidence")
+
+        #location stability
+        if al == "ls":
+            al_u.sort(key=lambda x:x[1])
+            save_text(al_u, save_acq, "uncertainty")
+            plot_distribution(al_u, save_acq, "Location_Stability", names)
     ##########
 
 def parse_opt():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'models/DropBeforeDetect.pt', help='model path(s)')
+    parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'models/colabBaseline.pt', help='model path(s)')
     parser.add_argument('--source', type=str, default=ROOT / 'data/images', help='file/dir/URL/glob, 0 for webcam')
     parser.add_argument('--imgsz', '--img', '--img-size', nargs='+', type=int, default=[640], help='inference size h,w')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='confidence threshold')
@@ -380,10 +393,10 @@ def parse_opt():
 
 ##########
     #added arguments for AL Strategies
-    parser.add_argument('--dropout', type=int, default=1, help='activate dropout and generate number of predicitons') #added
-    parser.add_argument('--al_random', action='store_true', help='activate random acquisition values') #added
-    parser.add_argument('--al_leastConf', action='store_true', help='activate least confidence acquisition values') #added
-    #parser.add_argument('--al', default='random', help='activate least confidence acquisition values') #added
+    #parser.add_argument('--dropout', type=int, default=1, help='activate dropout and generate number of predicitons') #added
+   # parser.add_argument('--al_random', action='store_true', help='activate random acquisition values') #added
+   # parser.add_argument('--al_leastConf', action='store_true', help='activate least confidence acquisition values') #added
+    parser.add_argument('--al', default='ls', help='activate least confidence acquisition values') #added
 ##########
 
     opt = parser.parse_args()
