@@ -37,8 +37,8 @@ def sort_uncertainty_values(fileName, path, type, plot=True):
 
 def plot_distribution(values, path, type, classnames):
 
+    
     #class names
-
     if(len(values[0]) > 2):
        
         #subplots
@@ -51,7 +51,7 @@ def plot_distribution(values, path, type, classnames):
         #print("###########")
         for i in range(1,len(values[0])):
             values.sort(key=lambda x:x[i])          
-            value = np.array([x[i] for x in values])
+            value = np.array([float(x[i]) for x in values])
             value[ value==1.0] = 0.0             #don't plot default
             
             axs[i-1].plot(value)
@@ -63,7 +63,7 @@ def plot_distribution(values, path, type, classnames):
         plt.savefig(path + "/" +  type + ".jpg")
                
     else:
-        values = np.array([x[1] for x in values])
+        values = np.array([float(x[1]) for x in values])
         fig = plt.figure()
         plt.plot(values)
         fig.suptitle(type, fontsize=18)
