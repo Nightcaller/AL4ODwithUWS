@@ -28,8 +28,8 @@ def moveSelection(imageNames, sourceDir, targetDir):
 
 
 #acqSource, Move From, To, How much percent, pickFrom (top,bot,mid), AL Strat (DropoutUncertainty, Random, leastConfidence)
-def selection(acqSource, source, target, threshold, modes):
-    from bisect import bisect_left, bisect_right
+def selection(acqSource, source, target, threshold, modes, n=2500):
+    from bisect import bisect_left
 
     acq = loadFile(acqSource + "/uncertainty.txt")
 
@@ -38,12 +38,11 @@ def selection(acqSource, source, target, threshold, modes):
     acqMax = int(acqN * threshold)
     
     valuesWithZero = [float(a[1]) for a in acq]
-    values = [float(a[1]) for a in acq if float(a[1]) != 0]
+    values = [float(a[1]) for a in acq if float(a[1]) != 0 or float(a[1]) != 1]
 
     quantil = max(values) * threshold
    
 
-   
     sslQuantil = values[0] + quantil 
     alQuantil = values[-1] - quantil 
 
