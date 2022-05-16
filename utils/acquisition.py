@@ -28,35 +28,41 @@ def moveSelection(imageNames, sourceDir, targetDir):
 
 
 #acqSource, Move From, To, How much percent, pickFrom (top,bot,mid), AL Strat (DropoutUncertainty, Random, leastConfidence)
-def selection(acqSource, source, target, threshold, modes, n=2500):
+def selection(acqSource, source, target, threshold, modes, n=2500,dynamic=False):
     from bisect import bisect_left
 
     acq = loadFile(acqSource + "/uncertainty.txt")
+    
 
     selection = []
+    allDataN = len(acq)
+    acqMax = n/len(modes)
+    acq = [a for a in acq if float(a[1]) != 0 and float(a[1]) != 1] #delete all 0 and 1 
     acqN = len(acq)
-    acqMax = int(acqN * threshold)
-    
+
     valuesWithZero = [float(a[1]) for a in acq]
-    values = [float(a[1]) for a in acq if float(a[1]) != 0 or float(a[1]) != 1]
+    values = [float(a[1]) for a in acq if float(a[1]) != 0 and float(a[1]) != 1]
 
-    quantil = max(values) * threshold
-   
-
-    sslQuantil = values[0] + quantil 
-    alQuantil = values[-1] - quantil 
-
-    sslIndex = bisect_left(valuesWithZero, sslQuantil)
     smallestValueIndex = valuesWithZero.index(values[0])
- 
-    alIndex = bisect_left(valuesWithZero, alQuantil)
 
-    print("Selection from : " + str(acqN))
+    if dynamic:
+        quantil = max(values) * threshold
+        sslQuantil = values[0] + quantil 
+        alQuantil = values[-1] - quantil 
+        sslIndex = bisect_left(valuesWithZero, sslQuantil)
+        alIndex = bisect_left(valuesWithZero, alQuantil)
+    else:
+        sslIndex = int(smallestValueIndex + acqMax)
+        alIndex =  int(acqN-acqMax)
+
+    
+
+    print("Selection from : " + str(allDataN))
     if any("ssl" in s for s in modes):
         
         if (sslIndex-smallestValueIndex > acqMax):
             sslIndex = smallestValueIndex + acqMax
-
+ 
         selection = acq[smallestValueIndex:sslIndex]
         print("Pseudo Labeling: " + str(sslIndex-smallestValueIndex))
 
