@@ -213,3 +213,9 @@ def gaussian_noise(image, level = 1):
     return image
 
 
+def flip_predicitions(image, pred):
+
+    height, width = image.shape[-2:]
+    boxes = pred[0]
+    boxes[:, [0, 2]] = width - pred[0][:, [2, 0]]
+    return [boxes]

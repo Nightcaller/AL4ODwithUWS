@@ -18,8 +18,10 @@ def random_sampling():
 #class agnostic least confidence
 def least_confidence(prediction):
 
-    return float(1 - torch.max(prediction[0][:,4]))
-
+    if len(prediction[0]) > 0:
+        return float(1 - torch.max(prediction[0][:,4]))
+    else:
+        return 0
 
 # BB Clustering by Hungarian Method
 def uncertainty(predictions, mode="DBScan" , threshold_iou=0.3):
@@ -240,3 +242,7 @@ def location_stability(predictions):
            
     return 1 - sumB0P/sumP
 
+def robustness(predictions):
+
+
+    return 1

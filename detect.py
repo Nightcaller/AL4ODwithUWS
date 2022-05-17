@@ -36,8 +36,8 @@ from utils.general import (LOGGER, check_file, check_img_size, check_imshow, che
 from utils.plots import Annotator, colors, save_one_box
 from utils.torch_utils import select_device, time_sync, apply_dropout
 
-from utils.active_learning import random_sampling, uncertainty, least_confidence, location_stability
-from utils.al_helpers import save_text, plot_distribution, gaussian_noise
+from utils.active_learning import random_sampling, uncertainty, least_confidence, location_stability, robustness
+from utils.al_helpers import save_text, plot_distribution, gaussian_noise, flip_predicitions
 
 @torch.no_grad()
 def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
@@ -121,6 +121,9 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
     #Overhead for any AL Strategies 
     if al == "ls":
         inferences = 6
+
+    if al == "ral":
+        inferences = 2
    
     if al != "none":                                
         save_acq = str(save_dir / 'acquisition' )
@@ -152,7 +155,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
         
         predictions = []                           #added
-        if al == "ls":
+        if al == "ls" or al == "ral":
             im_copy = im
         # Inference 
         #added dropout loop for iference with turned on dropout layers
@@ -161,6 +164,8 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                 break
             if al == "ls":
                 im = gaussian_noise(im_copy, 8 * i)
+            if al == "ral" and i > 0:
+                im = im.flip(-1)
 
             visualize = increment_path(save_dir / Path(path).stem, mkdir=True) if visualize else False
             pred = model(im, augment=augment, visualize=visualize)
@@ -171,8 +176,11 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             pred = non_max_suppression(pred, conf_thres, iou_thres, classes, agnostic_nms, max_det=max_det)
             dt[2] += time_sync() - t3
 
+            if al == "ral" and i > 0:
+                pred = flip_predicitions(im, pred)
+
             #saving all inference runs
-            predictions.append(pred)            #added
+            predictions.append(pred)           #added
             
         # Second-stage classifier (optional)
         # pred = utils.general.apply_classifier(pred, classifier_model, im, im0s)
@@ -204,6 +212,8 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             al_u.append((Path(path).stem, least_confidence(pred)))
         if al == "ls":
             al_u.append((Path(path).stem, location_stability(predictions)))
+        if al == "ral":
+            al_u.append((Path(path).stem, robustness(predictions)))
 
         #################
 
@@ -212,14 +222,17 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
         #added
         im0 = im0s.copy()                           
-        if(al != "dropout"):
-            predictions = predictions[0]
+        #if(al != "dropout" or al != "random"):
+        #    predictions = predictions[0]
         ###########
 
         # Process predictions
         for objN ,prediction in enumerate(predictions):
             if al == "dropout" and singleObject:              #added
                 im0 = im0s.copy()               #added
+
+            if al != "dropout":
+                prediction = prediction[0]
 
             for i, det in enumerate(prediction):  # per image
 
@@ -361,11 +374,16 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             al_u.sort(key=lambda x:x[1])
             save_text(al_u, save_acq, "uncertainty")
             plot_distribution(al_u, save_acq, "Location_Stability", names)
+
+        if al == "ral":
+            al_u.sort(key=lambda x:x[1])
+            save_text(al_u, save_acq, "uncertainty")
+            plot_distribution(al_u, save_acq, "Robustness", names)
     ##########
 
 def parse_opt():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'models/colabBaseline.pt', help='model path(s)')
+    parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'models/DropBeforeDetect.pt', help='model path(s)')
     parser.add_argument('--source', type=str, default=ROOT / 'data/images', help='file/dir/URL/glob, 0 for webcam')
     parser.add_argument('--imgsz', '--img', '--img-size', nargs='+', type=int, default=[640], help='inference size h,w')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='confidence threshold')
@@ -396,7 +414,7 @@ def parse_opt():
     #parser.add_argument('--dropout', type=int, default=1, help='activate dropout and generate number of predicitons') #added
    # parser.add_argument('--al_random', action='store_true', help='activate random acquisition values') #added
    # parser.add_argument('--al_leastConf', action='store_true', help='activate least confidence acquisition values') #added
-    parser.add_argument('--al', default='ls', help='activate least confidence acquisition values') #added
+    parser.add_argument('--al', default='random', help='activate least confidence acquisition values') #added
 ##########
 
     opt = parser.parse_args()
