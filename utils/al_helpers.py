@@ -219,3 +219,7 @@ def flip_predicitions(image, pred):
     boxes = pred[0]
     boxes[:, [0, 2]] = width - pred[0][:, [2, 0]]
     return [boxes]
+
+
+def kl_divergence(p, q):
+	return sum(p[i] * log2(p[i]/q[i]) for i in range(len(p)))

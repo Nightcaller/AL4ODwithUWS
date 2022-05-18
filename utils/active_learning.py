@@ -5,7 +5,7 @@ import torch
 import numpy as np
 
 from utils.metrics import box_iou
-
+from utils.al_helpers import kl_divergence
 
 
 
@@ -185,7 +185,42 @@ def cluster_lc(obj):
 
     return 1 - torch.max(obj[:,4])
 
+def margin(confs):
+    
+    if(confs[0].size()[0] <=1 ):
+       return 0
 
+    topTwo = torch.topk(confs[0],2)
+
+    return 1 - (sum(topTwo.values[:,0]) - sum(topTwo.values[:,1]))/len(topTwo.values)
+
+def entropy(confs):
+
+    cuda = torch.cuda.is_available()
+    try:
+        confs[0][0]
+    except:
+        return 0
+        
+    if cuda:
+        size = torch.tensor(len(confs[0]).to('cuda:0'))
+        classes = torch.tensor(len(confs[0]).to('cuda:0'))
+    else:
+        size = torch.tensor(len(confs[0][0]))
+        classes = torch.tensor(len(confs[0][0]))
+    
+    entropies = 0
+
+    for conf in confs[0]:
+        logProbs = torch.mul(conf ,torch.log2(conf))
+        numerator = torch.sub(torch.tensor(0), torch.sum(logProbs))
+        denom = torch.log2(classes)
+
+        entropies += torch.div(numerator, denom)
+    
+  
+
+    return entropies/size
 
 
 
@@ -242,7 +277,12 @@ def location_stability(predictions):
            
     return 1 - sumB0P/sumP
 
-def robustness(predictions):
+def robustness(predictions, confs):
 
+    #pq = kl_divergence(confs[0],confs[1])
+    #qp = kl_divergence(confs[1],confs[0])
+
+    #classLoss = 0.5 * (pq+qp)
+    
 
     return 1
