@@ -665,7 +665,7 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
     t = time.time()
     output = [torch.zeros((0, 6), device=prediction.device)] * prediction.shape[0]
     
-    #output_cls_confs = [torch.zeros((0, nc), device=prediction.device)] * prediction.shape[0]
+    output_cls_confs = [torch.zeros((0, nc), device=prediction.device)] * prediction.shape[0]
     
     for xi, x in enumerate(prediction):  # image index, image inference
         # Apply constraints
@@ -687,8 +687,8 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
 
         # Compute conf
         x[:, 5:] *= x[:, 4:5]  # conf = obj_conf * cls_conf
-      #  if det:
-      #      cls_confs = x[:, 5:]
+        if det:
+            cls_confs = x[:, 5:]
 
         # Box (center x, center y, width, height) to (x1, y1, x2, y2)
         box = xywh2xyxy(x[:, :4])
@@ -732,16 +732,17 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
 
         output[xi] = x[i]
         ###added 
-       # if det:
-        #    output_cls_confs[xi] = cls_confs[i]
+        if det:
+            output_cls_confs[xi] = cls_confs[i]
 
         #####
         if (time.time() - t) > time_limit:
             print(f'WARNING: NMS time limit {time_limit}s exceeded')
             break  # time limit exceeded
-
-    return output #, output_cls_confs
-
+    if det:
+        return output , output_cls_confs
+    else
+        return output
 
 def strip_optimizer(f='best.pt', s=''):  # from utils.general import *; strip_optimizer()
     # Strip optimizer from 'f' to finalize training, optionally save as 's'
