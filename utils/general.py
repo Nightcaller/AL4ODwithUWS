@@ -741,7 +741,7 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
             break  # time limit exceeded
     if det:
         return output , output_cls_confs
-    else
+    else:
         return output
 
 def strip_optimizer(f='best.pt', s=''):  # from utils.general import *; strip_optimizer()
