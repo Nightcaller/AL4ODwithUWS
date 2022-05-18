@@ -664,8 +664,8 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
 
     t = time.time()
     output = [torch.zeros((0, 6), device=prediction.device)] * prediction.shape[0]
-    if det:
-        output_cls_confs = [torch.zeros((0, nc), device=prediction.device)] * prediction.shape[0]
+    
+    output_cls_confs = [torch.zeros((0, nc), device=prediction.device)] * prediction.shape[0]
     
     for xi, x in enumerate(prediction):  # image index, image inference
         # Apply constraints
