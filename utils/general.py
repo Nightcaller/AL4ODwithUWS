@@ -640,7 +640,7 @@ def clip_coords(boxes, shape):
 
 
 def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=None, agnostic=False, multi_label=False,
-                        labels=(), max_det=300):
+                        labels=(), max_det=300, det=False):
     """Runs Non-Maximum Suppression (NMS) on inference results
 
     Returns:
@@ -664,7 +664,8 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
 
     t = time.time()
     output = [torch.zeros((0, 6), device=prediction.device)] * prediction.shape[0]
-    output_cls_confs = [torch.zeros((0, nc), device=prediction.device)] * prediction.shape[0]
+    if det:
+        output_cls_confs = [torch.zeros((0, nc), device=prediction.device)] * prediction.shape[0]
     
     for xi, x in enumerate(prediction):  # image index, image inference
         # Apply constraints
@@ -686,7 +687,8 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
 
         # Compute conf
         x[:, 5:] *= x[:, 4:5]  # conf = obj_conf * cls_conf
-        cls_confs = x[:, 5:]
+        if det:
+            cls_confs = x[:, 5:]
 
         # Box (center x, center y, width, height) to (x1, y1, x2, y2)
         box = xywh2xyxy(x[:, :4])
@@ -730,10 +732,9 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
 
         output[xi] = x[i]
         ###added 
-        try:
+        if det:
             output_cls_confs[xi] = cls_confs[i]
-        except:
-            pass
+
         #####
         if (time.time() - t) > time_limit:
             print(f'WARNING: NMS time limit {time_limit}s exceeded')
