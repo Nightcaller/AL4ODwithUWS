@@ -201,10 +201,10 @@ def entropy(confs):
         confs[0][0]
     except:
         return 0
-        
+
     if cuda:
-        size = torch.tensor(len(confs[0]).to('cuda:0'))
-        classes = torch.tensor(len(confs[0]).to('cuda:0'))
+        size = torch.tensor(len(confs[0])).to('cuda:0')
+        classes = torch.tensor(len(confs[0][0])).to('cuda:0')
     else:
         size = torch.tensor(len(confs[0][0]))
         classes = torch.tensor(len(confs[0][0]))
