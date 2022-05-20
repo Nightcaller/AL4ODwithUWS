@@ -231,12 +231,14 @@ def location_stability(predictions):
     first = True
     ls = []
     count = []
+    maxU = 0
 
     #cluster all predicitions into objects 
     for prediction in predictions:
         for det in prediction:
 
-           
+            
+
             #for *xyxy, conf, cls in reversed(det):                       # det[:,:4] => BB ; det[:,4] => Confidence, det[:,5] => Class    
             
             # initial reference boxes without noise (B0)
@@ -247,11 +249,17 @@ def location_stability(predictions):
                     objects.append(box[None,:])
                     ls.append(0)
                     count.append(0)
+                    
                 first = False
                 continue
 
+
             if(len(det) == 0): 
                 continue
+
+            u = 1 - torch.min(det[:,4])
+            if u > maxU:
+                maxU = u
 
             # enumerate corresponding boxes with noise C(B0) and sum the iou(B0,C(B0)) 
             for i, box in enumerate(det):
@@ -259,7 +267,8 @@ def location_stability(predictions):
                 for object in objects:
                     ious.append(torch.max(box_iou(box[None,:4], object[:,:4])))
 
-
+                
+                
                 #assign BB to max overlap 
                 maxIoU = max(ious)
                 index = ious.index(maxIoU) #index of corresponding box
@@ -275,14 +284,11 @@ def location_stability(predictions):
     sumB0P = sum((x[0][4]*ls[i]) for i, x in enumerate(objects))
     sumP = sum(x[0][4] for x in objects)
            
-    return 1 - sumB0P/sumP
+    return 0.5 + (maxU - (sumB0P/sumP))
 
 def robustness(predictions, confs):
 
-    #pq = kl_divergence(confs[0],confs[1])
-    #qp = kl_divergence(confs[1],confs[0])
-
-    #classLoss = 0.5 * (pq+qp)
+    ent = entropy(confs)
     
 
     return 1
