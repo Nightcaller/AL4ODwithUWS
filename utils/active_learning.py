@@ -23,6 +23,11 @@ def least_confidence(prediction):
     else:
         return 0
 
+
+def location_uncertainty(predictions, confs):
+
+    return 0
+
 # BB Clustering by Hungarian Method
 def uncertainty(predictions, mode="DBScan" , threshold_iou=0.3):
     
@@ -198,16 +203,16 @@ def entropy(confs):
 
     cuda = torch.cuda.is_available()
     try:
-        confs[0][0]
+        confs[0]
     except:
         return 0
 
     if cuda:
-        size = torch.tensor(len(confs[0])).to('cuda:0')
-        classes = torch.tensor(len(confs[0][0])).to('cuda:0')
+        size = torch.tensor(len(confs)).to('cuda:0')
+        classes = torch.tensor(len(confs[0])).to('cuda:0')
     else:
-        size = torch.tensor(len(confs[0][0]))
-        classes = torch.tensor(len(confs[0][0]))
+        size = torch.tensor(len(confs[0]))
+        classes = torch.tensor(len(confs[0]))
     
     entropies = 0
 
@@ -288,7 +293,62 @@ def location_stability(predictions):
 
 def robustness(predictions, confs):
 
-    ent = entropy(confs)
-    
+    objects = []
+    first = True
 
-    return 1
+    #cluster all predicitions into objects 
+    for prediction in predictions:
+        for det in prediction:
+
+            if(len(det) == 0):
+                continue
+            #for *xyxy, conf, cls in reversed(det):                       # det[:,:4] => BB ; det[:,4] => Confidence, det[:,5] => Class    
+            
+            if(first):
+               for box in det:
+                   objects.append(box[None,:])
+               first = False
+               pairs = [-1] * len(objects)
+               continue
+            
+
+            # enumerate all objects and check the ious of already discoverd objects
+            for i, d in enumerate(det):
+                ious = []
+                for object in objects:
+                    ious.append(torch.max(box_iou(d[None,:4], object[:,:4])))
+
+
+                #assign BB to max overlap 
+                maxIoU = max(ious)
+                index = ious.index(maxIoU)
+
+                if(sum(ious) == 0):                     
+                    continue
+                if(d[5] == objects[index][0][5] ):   #add to existing cluster
+                    objects[index] = torch.cat((objects[index], d[None,:]), 0) 
+                    pairs[index] = i
+               
+    classCon = 0
+    ent = 0
+
+    validPairs = 0
+
+    for i, pair in enumerate(pairs):
+        if pair == -1:
+            continue
+
+        pq = kl_divergence(confs[0][0][i],confs[1][0][pair])
+        qp = kl_divergence(confs[1][0][pair],confs[0][0][i])
+
+        classCon += 0.5 * (pq+qp)
+        ent += entropy([confs[0][0][i],confs[1][0][pair]])
+        validPairs += 1
+
+    if validPairs == 0:
+        return 0
+
+    classCon = classCon  / validPairs
+    ent = ent  / validPairs
+
+    return ent * classCon

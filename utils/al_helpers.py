@@ -222,4 +222,4 @@ def flip_predicitions(image, pred):
 
 
 def kl_divergence(p, q):
-	return sum(p[i] * log2(p[i]/q[i]) for i in range(len(p)))
+	return sum(p[i] * torch.log2(p[i]/q[i]) for i in range(len(p)))

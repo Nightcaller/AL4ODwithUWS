@@ -205,7 +205,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
                 #print(f'{u}  {Path(path)}')
 
-            al_u.append((Path(path).stem, u))  # max uncertainty for every image
+            al_u.append((Path(path).stem, u))  # max uncertainty for evesy image
             
             #TODO make flag
             singleObject = False
@@ -215,11 +215,11 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         if al == "margin":
             al_u.append((Path(path).stem, margin(confs)))
         if al == "entropy":
-            al_u.append((Path(path).stem, entropy(confs)))
+            al_u.append((Path(path).stem, entropy(confs[0])))
         if al == "ls":
             al_u.append((Path(path).stem, location_stability(predictions)))
         if al == "ral":
-            al_u.append((Path(path).stem, robustness(predictions, 0)))
+            al_u.append((Path(path).stem, robustness(predictions, confidences)))
 
         #################
 
@@ -430,7 +430,7 @@ def parse_opt():
     #parser.add_argument('--dropout', type=int, default=1, help='activate dropout and generate number of predicitons') #added
    # parser.add_argument('--al_random', action='store_true', help='activate random acquisition values') #added
    # parser.add_argument('--al_leastConf', action='store_true', help='activate least confidence acquisition values') #added
-    parser.add_argument('--al', default='ls', help='activate least confidence acquisition values') #added
+    parser.add_argument('--al', default='ral', help='activate least confidence acquisition values') #added
 ##########
 
     opt = parser.parse_args()
