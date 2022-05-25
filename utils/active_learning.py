@@ -295,6 +295,7 @@ def robustness(predictions, confs):
 
     objects = []
     first = True
+    pairs = []
 
     #cluster all predicitions into objects 
     for prediction in predictions:
