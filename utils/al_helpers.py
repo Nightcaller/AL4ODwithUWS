@@ -161,7 +161,6 @@ def plot_results(expPaths, subPaths ,file, savePath, n, colors, xLabel, labels):
 def save_text(values, save_dir, fileName):
     save_dir = save_dir + "/" + fileName + ".txt"
     print(type(values))
-
     print(str(values))
 
     with open(save_dir, 'a') as f:
