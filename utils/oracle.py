@@ -170,7 +170,7 @@ def autOracle(gtPath, savePath= None,  acqPath=None, predPath=None):
             ("Run,","Time in Hours, Hits, Part Hits, Misses"), 
             ("0 ," ,str(labelingTimeTotal / 3600) + "," + str(hTotal) + ", " + str(phTotal)+  ", " + str(missTotal) )
         ] 
-        save_text(saveText,savePath,"oracle")
+        save_text(saveText, savePath, "oracle")
 
     print("Total Labeling Time: " + str(labelingTimeTotal / 3600) + " Hours")
     print("Hits: " + str(hTotal) + " - " + "Part Hits: " + str(phTotal) + " - " + "Misses: " + str(missTotal))
