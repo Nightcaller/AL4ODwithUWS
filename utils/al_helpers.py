@@ -65,7 +65,7 @@ def plot_distribution(values, path, type, classnames):
     else:
         values = np.array([float(x[1]) for x in values])
         fig = plt.figure()
-        plt.plot(values)
+        plt.plot(values, marker=".")
         fig.suptitle(type, fontsize=18)
         plt.xlabel("# of Image", fontsize=14)
         plt.ylabel("Uncertainty Value", fontsize=14)
