@@ -164,6 +164,7 @@ def save_text(values, save_dir, fileName):
         for value in values:
             
             print(str(values))
+            
             if(type(value[1]) == torch.Tensor):
                 val = float(value[1])
             else:
