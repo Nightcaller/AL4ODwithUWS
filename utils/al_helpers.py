@@ -163,7 +163,12 @@ def save_text(values, save_dir, fileName):
     with open(save_dir, 'a') as f:
         for value in values:
             
-            f.write( value[0] + " " + str(float(value[1])) + "\n")
+            if(type(value[1]) == torch.Tensor):
+                val = float(value[1])
+            else:
+                val = value[1]
+                
+            f.write( value[0] + " " + str(val) + "\n")
 
 
 
