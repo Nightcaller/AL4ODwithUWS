@@ -167,7 +167,7 @@ def autOracle(gtPath, savePath= None,  acqPath=None, predPath=None):
 
     if(os.path.exists(savePath)):
         saveText = [
-            ("Run,","Time in Hours, Hits, Part Hits, Misses"), 
+       #     ("Run,","Time in Hours, Hits, Part Hits, Misses"), 
        #     ("0 ," ,str(labelingTimeTotal / 3600) + "," + str(hTotal) + ", " + str(phTotal)+  ", " + str(missTotal) )
         ] 
         save_text(saveText,savePath,"oracle")
