@@ -5,7 +5,7 @@ import torch
 import numpy as np
 
 from utils.metrics import box_iou
-from utils.al_helpers import kl_divergence
+from utils.al_helpers import kl_divergence, hungarian_clustering
 
 
 
@@ -18,15 +18,28 @@ def random_sampling():
 #class agnostic least confidence
 def least_confidence(prediction):
 
-    if len(prediction[0]) > 0:
-        return float(1 - torch.max(prediction[0][:,4]))
-    else:
+    if len(prediction) <= 0:
         return 0
+        
+    return float(1 - torch.min(prediction[:,4]))
 
+def location_uncertainty(predictions, confidences):
 
-def location_uncertainty(predictions, confs):
+    predPairs, confPairs = hungarian_clustering(predictions, confidences)
 
-    return 0
+    if len(predPairs) == 0:
+        return 0
+    
+    lu = 0
+
+    for preds in predPairs:
+
+        meanBox = torch.mean(preds, 0)
+        lu += 1 - (torch.sum(box_iou(meanBox[None,:4], preds[:,:4])) / 10)
+
+    lu = lu / len(predPairs)
+
+    return lu
 
 # BB Clustering by Hungarian Method
 def uncertainty(predictions, mode="DBScan" , threshold_iou=0.3):
@@ -44,10 +57,10 @@ def uncertainty(predictions, mode="DBScan" , threshold_iou=0.3):
             #for *xyxy, conf, cls in reversed(det):                       # det[:,:4] => BB ; det[:,4] => Confidence, det[:,5] => Class    
             
             if(first):
-               for d in det:
-                   objects.append(d[None,:])
-               first = False
-               continue
+                for d in det:
+                    objects.append(d[None,:])
+                first = False
+                continue
             
 
             # enumerate all objects and check the ious of already discoverd objects
@@ -104,9 +117,9 @@ def uncertainty(predictions, mode="DBScan" , threshold_iou=0.3):
 #                for iouXobj in iou:
 #                    for j ,realIou in enumerate(iouXobj):
 #                    
- #                       if(torch.mean(realIou) <= 0):
- #                           objects.append(det[j][None,:])
- #               print(iou)
+#                       if(torch.mean(realIou) <= 0):
+#                           objects.append(det[j][None,:])
+#               print(iou)
             print(len(objects))
 
 '''
@@ -137,7 +150,11 @@ def cluster_dbscan(obj):
     
     return u
  
-def cluster_entropy(obj):
+def cluster_entropy(confidencesCluster):
+
+    return 0
+
+def cluster_entropy_old(obj):
       
 
     if(obj.size()[0] <=1 ):
@@ -176,7 +193,7 @@ def cluster_margin(obj):
     u = 0
 
     if(obj.size()[0] <=1 ):
-       return 0
+        return 0
 
     topTwo = torch.topk(obj[:,4],2)
 
@@ -188,14 +205,14 @@ def cluster_margin(obj):
 def cluster_lc(obj):
 
 
-    return 1 - torch.max(obj[:,4])
+    return 1 - torch.min(obj[:,4])
 
 def margin(confs):
     
-    if(confs[0].size()[0] <=1 ):
-       return 0
+    if(confs.size()[0] <=1 ):
+        return 0
 
-    topTwo = torch.topk(confs[0],2)
+    topTwo = torch.topk(confs,2)
 
     return 1 - (sum(topTwo.values[:,0]) - sum(topTwo.values[:,1]))/len(topTwo.values)
 
@@ -227,10 +244,35 @@ def entropy(confs):
 
     return entropies/size
 
-
-
-
 def location_stability(predictions):
+
+    objects = hungarian_clustering(predictions)
+
+    if len(objects) == 0:
+        return 0
+
+    sumB0P, sumP, sb, maxU = 0, 0, 0, 0
+
+    for obj in objects:
+        if len(obj) > 1:
+            sb = torch.sum(box_iou(obj[None,0,:4],obj[1:,:4] )) / 6
+            pmax = obj[0][4]                # obj[0] => Reference Box ; [4] => Pmax
+            sumB0P += pmax * sb                      
+            sumP += pmax
+            u = least_confidence(obj) 
+
+            if u > maxU:
+                maxU = u
+
+    if sumP == 0:
+        return 0
+
+
+    return (maxU - (sumB0P/sumP))
+
+#Deprecated
+def location_stability_old(predictions):
+
 
     objects = []
     first = True
@@ -239,48 +281,46 @@ def location_stability(predictions):
     maxU = 0
 
     #cluster all predicitions into objects 
-    for prediction in predictions:
-        for det in prediction:
-
-            
+    for det in predictions:
+        #for det in prediction:
 
             #for *xyxy, conf, cls in reversed(det):                       # det[:,:4] => BB ; det[:,4] => Confidence, det[:,5] => Class    
             
             # initial reference boxes without noise (B0)
-            if(first): 
-                if(len(det) == 0):
-                    return 0
-                for box in det:
-                    objects.append(box[None,:])
-                    ls.append(0)
-                    count.append(0)
-                    
-                first = False
-                continue
-
-
-            if(len(det) == 0): 
-                continue
-
-            u = 1 - torch.min(det[:,4])
-            if u > maxU:
-                maxU = u
-
-            # enumerate corresponding boxes with noise C(B0) and sum the iou(B0,C(B0)) 
-            for i, box in enumerate(det):
-                ious = []
-                for object in objects:
-                    ious.append(torch.max(box_iou(box[None,:4], object[:,:4])))
-
+        if(first): 
+            if(len(det) == 0):
+                return 0
+            for box in det:
+                objects.append(box[None,:])
+                ls.append(0)
+                count.append(0)
                 
-                
-                #assign BB to max overlap 
-                maxIoU = max(ious)
-                index = ious.index(maxIoU) #index of corresponding box
+            first = False
+            continue
 
-                ls[index] += maxIoU
-                count[index] += 1
-    
+
+        if(len(det) == 0): 
+            continue
+
+        u = 1 - torch.min(det[:,4])
+        if u > maxU:
+            maxU = u
+
+        # enumerate corresponding boxes with noise C(B0) and sum the iou(B0,C(B0)) 
+        for i, box in enumerate(det):
+            ious = []
+            for object in objects:
+                ious.append(torch.max(box_iou(box[None,:4], object[:,:4])))
+
+            
+            
+            #assign BB to max overlap 
+            maxIoU = max(ious)
+            index = ious.index(maxIoU) #index of corresponding box
+
+            ls[index] += maxIoU
+            count[index] += 1
+
     
     for i, _ in enumerate(ls):
         if count[i] > 0:
@@ -288,29 +328,62 @@ def location_stability(predictions):
 
     sumB0P = sum((x[0][4]*ls[i]) for i, x in enumerate(objects))
     sumP = sum(x[0][4] for x in objects)
-           
+
     return 0.5 + (maxU - (sumB0P/sumP))
 
-def robustness(predictions, confs):
+def robustness(predictions, confidences):
+
+    objPairs, confPairs = hungarian_clustering(predictions, confidences)
+
+    if len(objPairs) == 0:
+        return 0
+
+    classConsistency, entrop, validPairs = 0, 0, 0
+    
+    for i, pair in enumerate(confPairs):
+
+        if len(pair) <= 1:
+            continue
+        if len(pair) >= 3:          #only use maxIoU pairs 
+            maxIoUIndex = torch.argmax(box_iou(objPairs[i][None, 0,:4], objPairs[i][1:,:4] ))
+            pair = [pair[0], pair[maxIoUIndex+1]]
+
+        pq = kl_divergence(pair[0],pair[1])
+        qp = kl_divergence(pair[1],pair[0])
+
+        classConsistency += 0.5 * (pq+qp)
+        entrop += entropy(pair)
+        validPairs += 1
+
+    if validPairs == 0:
+        return 0
+
+    classConsistency = classConsistency  / validPairs
+    entrop = entrop  / validPairs
+
+    return classConsistency * entrop
+
+#Deprecated
+def robustness_old(predictions, confs):
 
     objects = []
     first = True
     pairs = []
 
     #cluster all predicitions into objects 
-    for prediction in predictions:
-        for det in prediction:
+    for det in predictions:
+        #for det in prediction:
 
             if(len(det) == 0):
                 continue
             #for *xyxy, conf, cls in reversed(det):                       # det[:,:4] => BB ; det[:,4] => Confidence, det[:,5] => Class    
             
             if(first):
-               for box in det:
-                   objects.append(box[None,:])
-               first = False
-               pairs = [-1] * len(objects)
-               continue
+                for box in det:
+                    objects.append(box[None,:])
+                first = False
+                pairs = [-1] * len(objects)
+                continue
             
 
             # enumerate all objects and check the ious of already discoverd objects
@@ -329,7 +402,7 @@ def robustness(predictions, confs):
                 if(d[5] == objects[index][0][5] ):   #add to existing cluster
                     objects[index] = torch.cat((objects[index], d[None,:]), 0) 
                     pairs[index] = i
-               
+
     classCon = 0
     ent = 0
 
@@ -339,11 +412,11 @@ def robustness(predictions, confs):
         if pair == -1:
             continue
 
-        pq = kl_divergence(confs[0][0][i],confs[1][0][pair])
-        qp = kl_divergence(confs[1][0][pair],confs[0][0][i])
+        pq = kl_divergence(confs[0][i],confs[1][pair])
+        qp = kl_divergence(confs[1][pair],confs[0][i])
 
         classCon += 0.5 * (pq+qp)
-        ent += entropy([confs[0][0][i],confs[1][0][pair]])
+        ent += entropy([confs[0][i],confs[1][pair]])
         validPairs += 1
 
     if validPairs == 0:

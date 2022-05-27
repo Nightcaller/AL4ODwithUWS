@@ -36,7 +36,7 @@ from utils.general import (LOGGER, check_file, check_img_size, check_imshow, che
 from utils.plots import Annotator, colors, save_one_box
 from utils.torch_utils import select_device, time_sync, apply_dropout
 
-from utils.active_learning import random_sampling, uncertainty, least_confidence, location_stability, robustness, margin,entropy
+from utils.active_learning import random_sampling, uncertainty, least_confidence, location_stability, robustness, margin,entropy, location_uncertainty
 from utils.al_helpers import save_text, plot_distribution, gaussian_noise, flip_predicitions
 
 @torch.no_grad()
@@ -110,9 +110,13 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 #########                                        #added 
     inferences = 1                 
         #activate dropout layers
-   # if(dropout>1):
+    # if(dropout>1):
     #    model.apply(apply_dropout) 
     #    inferences = dropout
+    if al == "lu":
+        model.apply(apply_dropout) 
+        inferences = 10
+
         
     if al == "dropout":
         model.apply(apply_dropout) 
@@ -120,7 +124,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
     #Overhead for any AL Strategies 
     if al == "ls":
-        inferences = 6
+        inferences = 7
 
     if al == "ral":
         inferences = 2
@@ -181,8 +185,8 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                 pred = flip_predicitions(im, pred)
 
             #saving all inference runs
-            predictions.append(pred)           #added
-            confidences.append(confs)           #added
+            predictions.append(pred[0])           #added
+            confidences.append(confs[0])           #added
             
         # Second-stage classifier (optional)
         # pred = utils.general.apply_classifier(pred, classifier_model, im, im0s)
@@ -195,6 +199,9 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         # Select random    
         if al == "random":
             al_u.append((Path(path).stem, random_sampling()))
+
+        if al == "lu":
+            al_u.append((Path(path).stem, location_uncertainty(predictions, confidences)))
 
         if al == "dropout":
             predictions, uAll = uncertainty(predictions)
@@ -213,7 +220,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         if al == "lc":
             al_u.append((Path(path).stem, least_confidence(pred)))
         if al == "margin":
-            al_u.append((Path(path).stem, margin(confs)))
+            al_u.append((Path(path).stem, margin(confs[0])))
         if al == "entropy":
             al_u.append((Path(path).stem, entropy(confs[0])))
         if al == "ls":
@@ -237,8 +244,8 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             if al == "dropout" and singleObject:              #added
                 im0 = im0s.copy()               #added
 
-            if al != "dropout":
-                prediction = prediction[0]
+           # if al != "dropout":
+           #     prediction = prediction[0]
 
             for i, det in enumerate(prediction):  # per image
 
@@ -363,6 +370,12 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             save_text(al_u, save_acq, "uncertainty")
             plot_distribution(al_u, save_acq, "Random_Sampling", names)
 
+        #Location Uncertainty 
+        if al == "lu":
+            al_u.sort(key=lambda x:x[1])
+            save_text(al_u, save_acq, "uncertainty")
+            plot_distribution(al_u, save_acq, "Location_Uncertainty", names)
+
         #Uncertainty 
         if al == "dropout":
             al_u.sort(key=lambda x:x[1])
@@ -430,7 +443,7 @@ def parse_opt():
     #parser.add_argument('--dropout', type=int, default=1, help='activate dropout and generate number of predicitons') #added
    # parser.add_argument('--al_random', action='store_true', help='activate random acquisition values') #added
    # parser.add_argument('--al_leastConf', action='store_true', help='activate least confidence acquisition values') #added
-    parser.add_argument('--al', default='ral', help='activate least confidence acquisition values') #added
+    parser.add_argument('--al', default='lu', help='activate least confidence acquisition values') #added
 ##########
 
     opt = parser.parse_args()

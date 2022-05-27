@@ -160,14 +160,10 @@ def plot_results(expPaths, subPaths ,file, savePath, n, colors, xLabel, labels):
 #Edit for more Lines 
 def save_text(values, save_dir, fileName):
     save_dir = save_dir + "/" + fileName + ".txt"
-    print(type(values))
-    print(str(values))
 
     with open(save_dir, 'a') as f:
         for value in values:
             
-            
-
             if(type(value[1]) == torch.Tensor):
                 val = float(value[1])
             else:
@@ -212,7 +208,7 @@ def annotate_image(path, savePath, gtBoxes, predBoxes, ious=None):
 
 def gaussian_noise(image, level = 1):
 
-   
+
     cuda = torch.cuda.is_available()
     if cuda:
         size = torch.randn(image.size()).to('cuda:0')
@@ -233,3 +229,58 @@ def flip_predicitions(image, pred):
 
 def kl_divergence(p, q):
 	return sum(p[i] * torch.log2(p[i]/q[i]) for i in range(len(p)))
+
+
+def hungarian_clustering(predictions, confidences = -1):
+
+    objects = []
+    confs = []
+    first = True
+    
+
+    #cluster all predicitions into objects 
+    for j, det in enumerate(predictions):
+        #for det in prediction:
+
+        if(len(det) == 0):
+            continue
+        #for *xyxy, conf, cls in reversed(det):                       # det[:,:4] => BB ; det[:,4] => Confidence, det[:,5] => Class    
+        
+        if(first):
+            for k, box in enumerate(det):
+                objects.append(box[None,:])
+                if confidences != -1:
+                    confs.append(confidences[j][k][None,:])
+            first = False
+            #pairs = [-1] * len(objects)
+            continue
+        
+
+        # enumerate all objects and check the ious of already discoverd objects
+        for k, box in enumerate(det):
+            ious = []
+            for object in objects:
+                ious.append(torch.max(box_iou(box[None,:4], object[:,:4])))
+
+
+            #assign BB to max overlap 
+            maxIoU = max(ious)
+            index = ious.index(maxIoU)
+
+            if(sum(ious) == 0):                     
+                continue
+            if(box[5] == objects[index][0][5] ):    #add to existing cluster
+                objects[index] = torch.cat((objects[index], box[None,:]), 0) 
+                if confidences != -1:
+                    confs[index] = torch.cat((confs[index], confidences[j][k][None,:]), 0) 
+            else:                                   # create new cluster
+                objects.append(box[None,:])
+                if confidences != -1:
+                    confs.append(confidences[j][k][None,:])
+                    
+
+
+    if confidences != -1:
+        return objects, confs
+    else:
+        return objects
