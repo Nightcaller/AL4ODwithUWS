@@ -169,8 +169,11 @@ def save_text(values, save_dir, fileName):
             else:
                 val = value[1]
 
-            f.write( value[0] + " " + str(val) + "\n")
-
+                
+            if len(value) == 2:
+                f.write( value[0] + " " + str(val) + "\n")
+            if len(value) == 3:
+                f.write( value[0] + " " + str(val) + " " + str(value[2]) + "\n")
 
 
 

@@ -192,10 +192,6 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         # pred = utils.general.apply_classifier(pred, classifier_model, im, im0s)
 
 
-        #added
-        #rnd_sampling = True
-        #al_uncertainty = False
-
         # Select random    
         if al == "random":
             al_u.append((Path(path).stem, random_sampling()))
@@ -218,7 +214,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             singleObject = False
 
         if al == "lc":
-            al_u.append((Path(path).stem, least_confidence(pred)))
+            al_u.append((Path(path).stem, least_confidence(pred[0])))
         if al == "margin":
             al_u.append((Path(path).stem, margin(confs[0])))
         if al == "entropy":
@@ -244,8 +240,8 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             if al == "dropout" and singleObject:              #added
                 im0 = im0s.copy()               #added
 
-           # if al != "dropout":
-           #     prediction = prediction[0]
+            # if al != "dropout":
+            #     prediction = prediction[0]
 
             for i, det in enumerate(prediction):  # per image
 
@@ -412,7 +408,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
 def parse_opt():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'models/DropBeforeDetect.pt', help='model path(s)')
+    parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'models/pretrained.pt', help='model path(s)')
     parser.add_argument('--source', type=str, default=ROOT / 'data/images', help='file/dir/URL/glob, 0 for webcam')
     parser.add_argument('--imgsz', '--img', '--img-size', nargs='+', type=int, default=[640], help='inference size h,w')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='confidence threshold')
@@ -441,9 +437,9 @@ def parse_opt():
 ##########
     #added arguments for AL Strategies
     #parser.add_argument('--dropout', type=int, default=1, help='activate dropout and generate number of predicitons') #added
-   # parser.add_argument('--al_random', action='store_true', help='activate random acquisition values') #added
-   # parser.add_argument('--al_leastConf', action='store_true', help='activate least confidence acquisition values') #added
-    parser.add_argument('--al', default='lu', help='activate least confidence acquisition values') #added
+    # parser.add_argument('--al_random', action='store_true', help='activate random acquisition values') #added
+    # parser.add_argument('--al_leastConf', action='store_true', help='activate least confidence acquisition values') #added
+    parser.add_argument('--al', default='lc', help='activate least confidence acquisition values') #added
 ##########
 
     opt = parser.parse_args()

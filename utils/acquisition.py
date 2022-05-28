@@ -63,14 +63,20 @@ def selection(acqSource, source, target, threshold, modes, n=2500,dynamic=False)
         if (sslIndex-smallestValueIndex > acqMax):
             sslIndex = smallestValueIndex + acqMax
  
-        selection = acq[smallestValueIndex:sslIndex]
+        sslSelection = acq[smallestValueIndex:sslIndex]
+        for s in sslSelection:
+            s.append("ssl")
+        selection = sslSelection 
         print("Pseudo Labeling: " + str(sslIndex-smallestValueIndex))
 
     if any("al" in s for s in modes):
         if(acqN-alIndex > acqMax):
             alIndex = acqN-acqMax
 
-        selection += acq[alIndex:]
+        alSelection = acq[alIndex:]
+        for s in alSelection:
+            s.append("al")
+        selection += alSelection
         print("Active Learning: " + str(acqN-alIndex))
     
     

@@ -91,7 +91,7 @@ def calcLabelingTime(hits):
 
     labelingTime = 7.8  #7.8 seconds base time for every image
 
-         #TODO check timing and quote here
+    #TODO check timing and quote here
     for hit in hits:
         if float(hit) > 0.90: # Label hit 
             h += 1
@@ -99,15 +99,28 @@ def calcLabelingTime(hits):
         elif float(hit) > 0.8: #label partly hit and in need of correction
             ph += 1
             labelingTime += 1.6 + 42             #TODO need timing for bb correction      
+        elif float(hit) == 0:
+            labelingTime += 42
         else:       #label not hit
             miss += 1
-            labelingTime += 1.6 + 42              # Redrawing box with quality control (arXiv:1602.08405v3)
+            labelingTime += 1.6 + 42        # Redrawing box with quality control (arXiv:1602.08405v3)
 
     #print ("Hits: " + str(h) + " - " + "Part Hits: " + str(ph) + " - " + "Misses: " + str(miss))
 
     return labelingTime, h, ph, miss
 
 
+def create_pseudo_label(hits, gt, pred, threshold):
+
+    for i, hit in enumerate(hits):
+        if hit >= threshold:
+            gt[i] = pred[i]
+
+    return gt
+
+def save_pseudo_label(gtPath, fileName, gtLabels):
+
+    return 0
 
 
 
@@ -118,20 +131,19 @@ def calcLabelingTime(hits):
 def autOracle(gtPath, savePath= None,  acqPath=None, predPath=None):
 
     labelingTimeTotal, hTotal, phTotal, missTotal = 0,0,0,0
-
+    pseudo_label_threshold = 0.9
 
     #get Acquisition Names
     if(acqPath is not None):
         acq = loadFile(acqPath + "/selection.txt")
         fileNames = [a[0] for a in acq] # only names not acq value
+        acqType = [a[2] for a in acq]
 
         gtLabels, _ = loadLabels(gtPath + "/labels", files=fileNames)
-    else:
+    else:   #calc pure labeling time for all gtPath Labels
         # load all label files from gtPath
         gtLabels, fileNames = loadLabels(gtPath + "/labels")
-
-    #load ground truth labels
-    
+  
     #load predicted labels
     if(predPath is not None):
         predLabels, _ = loadLabels(predPath + "/labels", files=fileNames)
@@ -144,6 +156,9 @@ def autOracle(gtPath, savePath= None,  acqPath=None, predPath=None):
             hits = torch.zeros(len(gtLabels[i]))
         else:
             hits = compare(gtLabels[i], predLabels[i], name)
+            if acqType[i] == "ssl" and max(hits) >= pseudo_label_threshold:
+                gtLabels[i] = create_pseudo_label(hits, gtLabels[i], predLabels[i], pseudo_label_threshold)
+                save_pseudo_label(gtPath, name, gtLabels[i])
 
         labelingTime, h, ph, miss = calcLabelingTime(hits)
 
