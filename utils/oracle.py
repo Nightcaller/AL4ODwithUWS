@@ -196,6 +196,8 @@ def autOracle(gtPath, savePath= None,  acqPath=None, predPath=None):
         save_text(saveText, savePath, "oracle")
 
     print("Total Labeling Time: " + str(labelingTimeTotal / 3600) + " Hours")
+    print("AL Labeling Time: " + str(labelingTimeAL / 3600) + " Hours")
+    print("SSL Labeling Time: " + str(labelingTimeSSL / 3600) + " Hours")
     print("Hits: " + str(hTotal) + " - " + "Part Hits: " + str(phTotal) + " - " + "Misses: " + str(missTotal) + " - " + "New Draws: " + str(drawTotal) )
 
     return labelingTimeTotal
