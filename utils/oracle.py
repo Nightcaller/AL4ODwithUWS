@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import os
 
-from utils.general import xywh2xyxy
+from utils.general import xywh2xyxy, xyxy2xywh
 from utils.metrics import box_iou
 from utils.acquisition import loadFile
 
@@ -49,7 +49,6 @@ def loadLabels(labelPath, files=None):
             
             labels.append(torch.empty(0))
         
-       
 
     #returns tensor with box labels; shape [x,y,5] [images, labels, boxes] box => [x,y,x,y, class]
     return labels, files
@@ -121,6 +120,13 @@ def create_pseudo_label(hits, gt, pred, threshold):
     return gt
 
 def save_pseudo_label(gtPath, fileName, gtLabels):
+    gtLabels = xyxy2xywh(gtLabels[:-1])
+    with open(gtPath + fileName + '.txt', 'a') as f:
+
+        for label in gtLabels:
+            label = label.numpy().tolist()
+            label = label[-1:] + label[:-1] 
+            f.write(('%g ' * len(label)).rstrip() % tuple(label) + '\n')
 
     return 0
 
@@ -130,7 +136,7 @@ def save_pseudo_label(gtPath, fileName, gtLabels):
     #1. groundTruth only:   Calculate standard labeling time
     #2. gt + acq:           Calculate labeling time of selected data
     #3. Full:               Calculate labeling time as if a human is given the machine labels and decides of label is hit or not 
-def autOracle(gtPath, savePath= None,  acqPath=None, predPath=None):
+def autOracle(gtPath, savePath= None,  acqPath=None, predPath=None, cycle="0"):
 
     labelingTimeSSL,labelingTimeAL, hTotal, phTotal, missTotal, drawTotal = 0,0,0,0,0,0
     pseudo_label_threshold = 0.9
@@ -145,7 +151,7 @@ def autOracle(gtPath, savePath= None,  acqPath=None, predPath=None):
     else:   #calc pure labeling time for all gtPath Labels
         # load all label files from gtPath
         gtLabels, fileNames = loadLabels(gtPath + "/labels")
-  
+
     #load predicted labels
     if(predPath is not None):
         predLabels, _ = loadLabels(predPath + "/labels", files=fileNames)
@@ -189,10 +195,16 @@ def autOracle(gtPath, savePath= None,  acqPath=None, predPath=None):
     # hit no => calc time to redraw
     labelingTimeTotal = labelingTimeAL + labelingTimeSSL
     if(os.path.exists(savePath)):
-        saveText = [
-            ("Run,","Time in Hours, Hits, Part Hits, Misses, NewDraws"), 
-            ("0 ," ,str(labelingTimeTotal / 3600) + "," + str(hTotal) + ", " + str(phTotal)+  ", " + str(missTotal) + ", " + str(drawTotal) )
-        ] 
+        if cycle[-1] == "0":
+            saveText = [
+                ("Run,","AL Time in Hours, SSL Time in Hours, Hits, Part Hits, Misses, NewDraws"), 
+                ("0 ," ,str(labelingTimeAL / 3600) + "," + str(labelingTimeSSL / 3600) + "," + str(hTotal) + ", " + str(phTotal)+  ", " + str(missTotal) + ", " + str(drawTotal) )
+            ]
+        else:
+            saveText = [
+                (str(cycle[-1]) + " ," ,str(labelingTimeAL / 3600) + "," + str(labelingTimeSSL / 3600) + "," + str(hTotal) + ", " + str(phTotal)+  ", " + str(missTotal) + ", " + str(drawTotal) )
+            ]
+
         save_text(saveText, savePath, "oracle")
 
     print("Total Labeling Time: " + str(labelingTimeTotal / 3600) + " Hours")

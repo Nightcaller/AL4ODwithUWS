@@ -32,12 +32,15 @@ def location_uncertainty(predictions, confidences):
     
     lu = 0
 
-    for preds in predPairs:
+    for i, preds in enumerate(predPairs):
 
         meanBox = torch.mean(preds, 0)
-        lu += 1 - (torch.sum(box_iou(meanBox[None,:4], preds[:,:4])) / 10)
+        lu += (1 - (torch.sum(box_iou(meanBox[None,:4], preds[:,:4])) / 10)) * entropy(confPairs[i]) 
+        #lu += 1 - (torch.sum(box_iou(meanBox[None,:4], preds[:,:4])) / 10)  
 
     lu = lu / len(predPairs)
+
+
 
     return lu
 
