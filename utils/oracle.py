@@ -88,6 +88,7 @@ def calcLabelingTime(hits):
     h = 0
     ph = 0
     miss = 0
+    draw = 0
 
     labelingTime = 7.8  #7.8 seconds base time for every image
 
@@ -100,6 +101,7 @@ def calcLabelingTime(hits):
             ph += 1
             labelingTime += 1.6 + 42             #TODO need timing for bb correction      
         elif float(hit) == 0:
+            draw += 1
             labelingTime += 42
         else:       #label not hit
             miss += 1
@@ -107,7 +109,7 @@ def calcLabelingTime(hits):
 
     #print ("Hits: " + str(h) + " - " + "Part Hits: " + str(ph) + " - " + "Misses: " + str(miss))
 
-    return labelingTime, h, ph, miss
+    return labelingTime, h, ph, miss, draw
 
 
 def create_pseudo_label(hits, gt, pred, threshold):
@@ -130,7 +132,7 @@ def save_pseudo_label(gtPath, fileName, gtLabels):
     #3. Full:               Calculate labeling time as if a human is given the machine labels and decides of label is hit or not 
 def autOracle(gtPath, savePath= None,  acqPath=None, predPath=None):
 
-    labelingTimeTotal, hTotal, phTotal, missTotal = 0,0,0,0
+    labelingTimeSSL,labelingTimeAL, hTotal, phTotal, missTotal, drawTotal = 0,0,0,0,0,0
     pseudo_label_threshold = 0.9
 
     #get Acquisition Names
@@ -151,7 +153,7 @@ def autOracle(gtPath, savePath= None,  acqPath=None, predPath=None):
     #for each gtBB in gtBBs
     for i, name in enumerate(fileNames):
         
-        if(predPath is None):
+        if(predPath is None) or acqType[i] == "al":
             #annotate all images with full time
             hits = torch.zeros(len(gtLabels[i]))
         else:
@@ -160,12 +162,18 @@ def autOracle(gtPath, savePath= None,  acqPath=None, predPath=None):
                 gtLabels[i] = create_pseudo_label(hits, gtLabels[i], predLabels[i], pseudo_label_threshold)
                 save_pseudo_label(gtPath, name, gtLabels[i])
 
-        labelingTime, h, ph, miss = calcLabelingTime(hits)
+        labelingTime, h, ph, miss, draw = calcLabelingTime(hits)
 
-        labelingTimeTotal += labelingTime
+        
+        if acqType[i] == "al":
+            labelingTimeAL += labelingTime
+        else:
+            labelingTimeSSL += labelingTime
+
         hTotal += h
         phTotal += ph
         missTotal += miss
+        drawTotal += draw
         
         
         #imagePath = gtPath+"/images/"+name+".jpg"
@@ -179,15 +187,15 @@ def autOracle(gtPath, savePath= None,  acqPath=None, predPath=None):
     # if no check if there was an hit at all
     # hit yes but bad => calc time to correct
     # hit no => calc time to redraw
-
+    labelingTimeTotal = labelingTimeAL + labelingTimeSSL
     if(os.path.exists(savePath)):
         saveText = [
-            ("Run,","Time in Hours, Hits, Part Hits, Misses"), 
-            ("0 ," ,str(labelingTimeTotal / 3600) + "," + str(hTotal) + ", " + str(phTotal)+  ", " + str(missTotal) )
+            ("Run,","Time in Hours, Hits, Part Hits, Misses, NewDraws"), 
+            ("0 ," ,str(labelingTimeTotal / 3600) + "," + str(hTotal) + ", " + str(phTotal)+  ", " + str(missTotal) + ", " + str(drawTotal) )
         ] 
         save_text(saveText, savePath, "oracle")
 
     print("Total Labeling Time: " + str(labelingTimeTotal / 3600) + " Hours")
-    print("Hits: " + str(hTotal) + " - " + "Part Hits: " + str(phTotal) + " - " + "Misses: " + str(missTotal))
+    print("Hits: " + str(hTotal) + " - " + "Part Hits: " + str(phTotal) + " - " + "Misses: " + str(missTotal) + " - " + "New Draws: " + str(drawTotal) )
 
     return labelingTimeTotal
