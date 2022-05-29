@@ -30,19 +30,27 @@ def location_uncertainty(predictions, confidences):
     if len(predPairs) == 0:
         return 0
     
-    lu = 0
+    sumLU = 0
+    maxLU = 0
+    avgLU = 0
 
     for i, preds in enumerate(predPairs):
+        if len(preds) < 2:
+            continue
 
         meanBox = torch.mean(preds, 0)
-        lu += (1 - (torch.sum(box_iou(meanBox[None,:4], preds[:,:4])) / 10)) * entropy(confPairs[i]) 
-        #lu += 1 - (torch.sum(box_iou(meanBox[None,:4], preds[:,:4])) / 10)  
+        lu = (1 - (torch.sum(box_iou(meanBox[None,:4], preds[:,:4])) / 10))  #* entropy(confPairs[i]) 
+        sumLU += lu
+        if maxLU < lu:
+            maxLU = lu
+        
+        
+    avgLU = sumLU / len(predPairs)
 
-    lu = lu / len(predPairs)
+    weightedLU = (avgLU + maxLU + sumLU) / 3
 
 
-
-    return lu
+    return avgLU
 
 # BB Clustering by Hungarian Method
 def uncertainty(predictions, mode="DBScan" , threshold_iou=0.3):

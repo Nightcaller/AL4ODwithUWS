@@ -84,9 +84,19 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
     # Load model
     device = select_device(device)
-    model = DetectMultiBackend(weights, device=device, dnn=dnn)
-    stride, names, pt, jit, onnx, engine = model.stride, model.names, model.pt, model.jit, model.onnx, model.engine
-    imgsz = check_img_size(imgsz, s=stride)  # check image size
+    models = []
+    if len(weights) <= 1:
+        weights = weights[0]
+        model = DetectMultiBackend(weights, device=device, dnn=dnn)
+        stride, names, pt, jit, onnx, engine = model.stride, model.names, model.pt, model.jit, model.onnx, model.engine
+        imgsz = check_img_size(imgsz, s=stride)  # check image size
+    else: 
+        for weight in weights:
+            model = DetectMultiBackend(weight, device=device, dnn=dnn)
+            models.append(model)
+    
+        stride, names, pt, jit, onnx, engine = model.stride, model.names, model.pt, model.jit, model.onnx, model.engine
+        imgsz = check_img_size(imgsz, s=stride)  # check image size
 
     # Half
     half &= (pt or jit or engine) and device.type != 'cpu'  # half precision only supported by PyTorch on CUDA
@@ -113,10 +123,12 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
     # if(dropout>1):
     #    model.apply(apply_dropout) 
     #    inferences = dropout
-    if al == "lu":
-        model.apply(apply_dropout) 
+    if al == "lu_d":
         inferences = 10
-
+        model.apply(apply_dropout) 
+        
+    if al == "lu_e":
+        inferences = len(models)
         
     if al == "dropout":
         model.apply(apply_dropout) 
@@ -124,11 +136,9 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
     #Overhead for any AL Strategies 
     if al == "ls":
-        inferences = 7
-
+        inferences = 7              # one reference image 6 levels of noise
     if al == "ral":
-        inferences = 2
-   
+        inferences = 2              # reference + horizontal flip
     if al != "none":                                
         save_acq = str(save_dir / 'acquisition' )
         (save_dir / 'acquisition').mkdir(parents=True, exist_ok=True)
@@ -138,8 +148,13 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 ##########
 
 
-    # Run inference
-    model.warmup(imgsz=(1, 3, *imgsz), half=half)  # warmup
+    # Run inference#
+    if al == "lu_e":
+        for model in models:
+            model.warmup(imgsz=(1, 3, *imgsz), half=half)  # warmup
+    else:
+        model.warmup(imgsz=(1, 3, *imgsz), half=half)  # warmup
+
     dt, seen = [0.0, 0.0, 0.0], 0
 
     ##### added progress bar over dataset
@@ -167,6 +182,8 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         for i in range(0,inferences):                       #added
             if al == "random":
                 break
+            if al == "lu_e":
+                model = models[i]
             if al == "ls":
                 im = gaussian_noise(im_copy, 8 * i)
             if al == "ral" and i > 0:
@@ -196,7 +213,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         if al == "random":
             al_u.append((Path(path).stem, random_sampling()))
 
-        if al == "lu":
+        if al == "lu_d" or al == "lu_e":
             al_u.append((Path(path).stem, location_uncertainty(predictions, confidences)))
 
         if al == "dropout":
@@ -367,10 +384,14 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             plot_distribution(al_u, save_acq, "Random_Sampling", names)
 
         #Location Uncertainty 
-        if al == "lu":
+        if al == "lu_d":
             al_u.sort(key=lambda x:x[1])
             save_text(al_u, save_acq, "uncertainty")
-            plot_distribution(al_u, save_acq, "Location_Uncertainty", names)
+            plot_distribution(al_u, save_acq, "Location_Uncertainty_Dropout", names)
+        if al == "lu_e":
+            al_u.sort(key=lambda x:x[1])
+            save_text(al_u, save_acq, "uncertainty")
+            plot_distribution(al_u, save_acq, "Location_Uncertainty_Ensembles", names)
 
         #Uncertainty 
         if al == "dropout":
@@ -408,7 +429,10 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
 def parse_opt():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'models/pretrained.pt', help='model path(s)')
+    pwd = "/Users/mhpinnovation/Documents/Daniel/Master/detector/bookish-carnival/models/"
+    w = [pwd + "73.pt",pwd + "42.pt",pwd + "11.pt" ]
+        #,pwd + "42.pt"]
+    parser.add_argument('--weights', nargs='+', type=str, default=w, help='model path(s)')
     parser.add_argument('--source', type=str, default=ROOT / 'data/images', help='file/dir/URL/glob, 0 for webcam')
     parser.add_argument('--imgsz', '--img', '--img-size', nargs='+', type=int, default=[640], help='inference size h,w')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='confidence threshold')
@@ -439,7 +463,7 @@ def parse_opt():
     #parser.add_argument('--dropout', type=int, default=1, help='activate dropout and generate number of predicitons') #added
     # parser.add_argument('--al_random', action='store_true', help='activate random acquisition values') #added
     # parser.add_argument('--al_leastConf', action='store_true', help='activate least confidence acquisition values') #added
-    parser.add_argument('--al', default='entropy', help='activate least confidence acquisition values') #added
+    parser.add_argument('--al', default='lu_e', help='activate least confidence acquisition values') #added
 ##########
 
     opt = parser.parse_args()
