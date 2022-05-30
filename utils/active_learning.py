@@ -68,7 +68,19 @@ def entropy(confs):
 
 
 
+def cluster_entropy(predictions, confidences):
 
+    predPairs, confPairs = hungarian_clustering(predictions, confidences)
+
+    entropies = 0
+    for confs in confPairs:
+        entropies += entropy(confs)
+
+
+    return entropies / len(confPairs)
+
+
+    
 ############################################################################
 ############################################################################
 #########  ADVANCED METHODS #########

@@ -36,7 +36,7 @@ from utils.general import (LOGGER, check_file, check_img_size, check_imshow, che
 from utils.plots import Annotator, colors, save_one_box
 from utils.torch_utils import select_device, time_sync, apply_dropout
 
-from utils.active_learning import random_sampling, uncertainty, least_confidence, location_stability, robustness, margin,entropy, location_uncertainty
+from utils.active_learning import random_sampling, uncertainty, least_confidence, location_stability, robustness, margin,entropy, location_uncertainty, cluster_entropy
 from utils.al_helpers import save_text, plot_distribution, gaussian_noise, flip_predicitions
 
 @torch.no_grad()
@@ -123,8 +123,8 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
     # if(dropout>1):
     #    model.apply(apply_dropout) 
     #    inferences = dropout
-    if al == "lu_d":
-        inferences = 10
+    if al == "lu_d" or al == "entropy_d":
+        inferences = 50
         model.apply(apply_dropout) 
         
     if al == "lu_e":
@@ -133,7 +133,6 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
     if al == "dropout":
         model.apply(apply_dropout) 
         inferences = 10
-
     #Overhead for any AL Strategies 
     if al == "ls":
         inferences = 7              # one reference image 6 levels of noise
@@ -212,50 +211,36 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         # Select random    
         if al == "random":
             al_u.append((Path(path).stem, random_sampling()))
-
         if al == "lu_d" or al == "lu_e":
             al_u.append((Path(path).stem, location_uncertainty(predictions, confidences)))
-
-        if al == "dropout":
-            predictions, uAll = uncertainty(predictions)
-            
-            u = 0
-            if (len(uAll) > 0):
-                u =  sum(uAll) / len(uAll)
-
-                #print(f'{u}  {Path(path)}')
-
-            al_u.append((Path(path).stem, u))  # max uncertainty for evesy image
-            
-            #TODO make flag
-            singleObject = False
-
         if al == "lc":
             al_u.append((Path(path).stem, least_confidence(pred[0])))
         if al == "margin":
             al_u.append((Path(path).stem, margin(confs[0])))
         if al == "entropy":
+            al_u.append((Path(path).stem, cluster_entropy(predictions, confidences)))
+        if al == "entropy_d":
             al_u.append((Path(path).stem, entropy(confs[0])))
         if al == "ls":
             al_u.append((Path(path).stem, location_stability(predictions)))
         if al == "ral":
             al_u.append((Path(path).stem, robustness(predictions, confidences)))
 
-        #################
-
-
 
 
         #added
-        im0 = im0s.copy()                           
+        im0 = im0s.copy()   # to annotate every pred on same image  
+
+
+
         #if(al != "dropout" or al != "random"):
         #    predictions = predictions[0]
         ###########
 
         # Process predictions
         for objN ,prediction in enumerate(predictions):
-            if al == "dropout" and singleObject:              #added
-                im0 = im0s.copy()               #added
+            #if al == "dropout" and singleObject:              #added
+            #    im0 = im0s.copy()               #added
 
             # if al != "dropout":
             #     prediction = prediction[0]
@@ -274,11 +259,12 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
                 p = Path(p)  # to Path
 
-                if al == "dropout" and singleObject:
-                    save_path = str(save_dir) + "/" + p.stem + "_" + str(objN) + ".jpg"  # one image per Object
-                else:
-                    save_path = str(save_dir / p.name)  # im.jpg
+                #if al == "dropout" and singleObject:
+                #    save_path = str(save_dir) + "/" + p.stem + "_" + str(objN) + ".jpg"  # one image per Object
+                #else:
+                #    save_path = str(save_dir / p.name)  # im.jpg
 
+                save_path = str(save_dir / p.name)  # im.jpg
                 txt_path = str(save_dir / 'labels' / p.stem) + ('' if dataset.mode == 'image' else f'_{frame}')  # im.txt
     
     #removed 
@@ -333,30 +319,30 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
             # Stream results
             
-            if view_img:
-                im0 = annotator.result()
-                cv2.imshow(str(p), im0)
-                cv2.waitKey(1)  # 1 millisecond
+        if view_img:
+            im0 = annotator.result()
+            cv2.imshow(str(p), im0)
+            cv2.waitKey(1)  # 1 millisecond
 
-            # Save results (image with detections)
-            if save_img:
-                im0 = annotator.result()
-                if dataset.mode == 'image':
-                    cv2.imwrite(save_path, im0)
-                else:  # 'video' or 'stream'
-                    if vid_path[i] != save_path:  # new video
-                        vid_path[i] = save_path
-                        if isinstance(vid_writer[i], cv2.VideoWriter):
-                            vid_writer[i].release()  # release previous video writer
-                        if vid_cap:  # video
-                            fps = vid_cap.get(cv2.CAP_PROP_FPS)
-                            w = int(vid_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-                            h = int(vid_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-                        else:  # stream
-                            fps, w, h = 30, im0.shape[1], im0.shape[0]
-                            save_path += '.mp4'
-                        vid_writer[i] = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
-                    vid_writer[i].write(im0)
+        # Save results (image with detections)
+        if save_img:
+            im0 = annotator.result()
+            if dataset.mode == 'image':
+                cv2.imwrite(save_path, im0)
+            else:  # 'video' or 'stream'
+                if vid_path[i] != save_path:  # new video
+                    vid_path[i] = save_path
+                    if isinstance(vid_writer[i], cv2.VideoWriter):
+                        vid_writer[i].release()  # release previous video writer
+                    if vid_cap:  # video
+                        fps = vid_cap.get(cv2.CAP_PROP_FPS)
+                        w = int(vid_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                        h = int(vid_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                    else:  # stream
+                        fps, w, h = 30, im0.shape[1], im0.shape[0]
+                        save_path += '.mp4'
+                    vid_writer[i] = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
+                vid_writer[i].write(im0)
 
                 #####
 
@@ -377,54 +363,33 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
     #added
      #sort & plot & save txt
     if al != "none":    
+        al_u.sort(key=lambda x:x[1])
+        save_text(al_u, save_acq, "uncertainty")
         #Random                                           
         if al == "random":
-            al_u.sort(key=lambda x:x[1])
-            save_text(al_u, save_acq, "uncertainty")
             plot_distribution(al_u, save_acq, "Random_Sampling", names)
-
         #Location Uncertainty 
         if al == "lu_d":
-            al_u.sort(key=lambda x:x[1])
-            save_text(al_u, save_acq, "uncertainty")
             plot_distribution(al_u, save_acq, "Location_Uncertainty_Dropout", names)
         if al == "lu_e":
-            al_u.sort(key=lambda x:x[1])
-            save_text(al_u, save_acq, "uncertainty")
             plot_distribution(al_u, save_acq, "Location_Uncertainty_Ensembles", names)
-
         #Uncertainty 
         if al == "dropout":
-            al_u.sort(key=lambda x:x[1])
-            save_text(al_u, save_acq, "uncertainty")
             plot_distribution(al_u, save_acq, "Dropout_Uncertainty", names)
-
         #least Confidence
         if al == "lc":
-            al_u.sort(key=lambda x:x[1])
-            save_text(al_u, save_acq, "uncertainty")
             plot_distribution(al_u, save_acq, "Least_Confidence", names)
-
         #location stability
         if al == "ls":
-            al_u.sort(key=lambda x:x[1])
-            save_text(al_u, save_acq, "uncertainty")
             plot_distribution(al_u, save_acq, "Location_Stability", names)
-
         if al == "ral":
-            al_u.sort(key=lambda x:x[1])
-            save_text(al_u, save_acq, "uncertainty")
             plot_distribution(al_u, save_acq, "Robustness", names)
-
         if al == "margin":
-            al_u.sort(key=lambda x:x[1])
-            save_text(al_u, save_acq, "uncertainty")
             plot_distribution(al_u, save_acq, "Margin", names)
-
         if al == "entropy":
-            al_u.sort(key=lambda x:x[1])
-            save_text(al_u, save_acq, "uncertainty")
             plot_distribution(al_u, save_acq, "Entropy", names)
+        if al == "entropy_d":
+            plot_distribution(al_u, save_acq, "Entropy_Dropout", names)
     ##########
 
 def parse_opt():
