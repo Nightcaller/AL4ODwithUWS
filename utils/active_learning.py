@@ -70,7 +70,10 @@ def entropy(confs):
 
 def cluster_entropy(predictions, confidences):
 
-    predPairs, confPairs = hungarian_clustering(predictions, confidences)
+    _, confPairs = hungarian_clustering(predictions, confidences)
+
+    if len(confPairs) < 1:
+        return 0
 
     entropies = 0
     for confs in confPairs:
@@ -80,7 +83,7 @@ def cluster_entropy(predictions, confidences):
     return entropies / len(confPairs)
 
 
-    
+
 ############################################################################
 ############################################################################
 #########  ADVANCED METHODS #########
@@ -92,7 +95,7 @@ def location_uncertainty(predictions, confidences):
     predPairs, confPairs = hungarian_clustering(predictions, confidences)
 
     inferences = len(predictions)
-    if len(predPairs) == 0:
+    if len(predPairs) < 1:
         return 0
     
     sumLU = 0
@@ -102,10 +105,12 @@ def location_uncertainty(predictions, confidences):
     for i, preds in enumerate(predPairs):
         if len(preds) < inferences/2:
             continue
+        elif len(preds[0]) < 1:
+            continue
 
         meanBox = torch.mean(preds, 0)
-        lu = (1 - (torch.sum(box_iou(meanBox[None,:4], preds[:,:4])) / inferences))  #* entropy(confPairs[i]) 
-        sumLU += lu
+        lu = (1 - (torch.sum(box_iou(meanBox[None,:4], preds[:,:4])) / inferences)) + entropy(confPairs[i]) 
+        sumLU += lu * 0.5
         if maxLU < lu:
             maxLU = lu
         
@@ -123,7 +128,7 @@ def location_stability(predictions):
 
     objects = hungarian_clustering(predictions)
 
-    if len(objects) == 0:
+    if len(objects) < 1:
         return 0
 
     sumB0P, sumP, sb, maxU = 0, 0, 0, 0
@@ -439,10 +444,6 @@ def cluster_dbscan(obj):
         pass
     
     return u
- 
-def cluster_entropy(confidencesCluster):
-
-    return 0
 
 def cluster_entropy_old(obj):
       

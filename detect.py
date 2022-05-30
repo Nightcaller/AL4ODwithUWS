@@ -124,8 +124,8 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
     #    model.apply(apply_dropout) 
     #    inferences = dropout
     if al == "lu_d" or al == "entropy_d":
-        inferences = 50
-        model.apply(apply_dropout) 
+        inferences = 10
+        
         
     if al == "lu_e":
         inferences = len(models)
@@ -187,6 +187,8 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                 im = gaussian_noise(im_copy, 8 * i)
             if al == "ral" and i > 0:
                 im = im.flip(-1)
+            if (al == "lu_d" or al == "entropy_d") and i > 1:
+                model.apply(apply_dropout) 
 
             visualize = increment_path(save_dir / Path(path).stem, mkdir=True) if visualize else False
             pred = model(im, augment=augment, visualize=visualize)
@@ -217,10 +219,10 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             al_u.append((Path(path).stem, least_confidence(pred[0])))
         if al == "margin":
             al_u.append((Path(path).stem, margin(confs[0])))
-        if al == "entropy":
-            al_u.append((Path(path).stem, cluster_entropy(predictions, confidences)))
-        if al == "entropy_d":
+        if al == "entropy": 
             al_u.append((Path(path).stem, entropy(confs[0])))
+        if al == "entropy_d":
+            al_u.append((Path(path).stem, cluster_entropy(predictions, confidences)))
         if al == "ls":
             al_u.append((Path(path).stem, location_stability(predictions)))
         if al == "ral":
