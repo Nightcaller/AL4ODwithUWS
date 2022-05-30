@@ -120,13 +120,11 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 #########                                        #added 
     inferences = 1                 
         #activate dropout layers
-    # if(dropout>1):
-    #    model.apply(apply_dropout) 
-    #    inferences = dropout
+
     if al == "lu_d" or al == "entropy_d":
         inferences = 10
-        
-        
+        #model.apply(apply_dropout) 
+               
     if al == "lu_e":
         inferences = len(models)
         

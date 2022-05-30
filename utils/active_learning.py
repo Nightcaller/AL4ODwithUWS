@@ -105,12 +105,15 @@ def location_uncertainty(predictions, confidences):
     for i, preds in enumerate(predPairs):
         if len(preds) < inferences/2:
             continue
-        elif len(preds[0]) < 1:
-            continue
+
 
         meanBox = torch.mean(preds, 0)
-        lu = (1 - (torch.sum(box_iou(meanBox[None,:4], preds[:,:4])) / inferences)) + entropy(confPairs[i]) 
-        sumLU += lu * 0.5
+        #lu = (1 - (torch.sum(box_iou(meanBox[None,:4], preds[:,:4])) / inferences))
+        lu = (1 - (torch.sum(box_iou(meanBox[None,:4], preds[:,:4])) / len(preds)))
+        ent = entropy(confPairs[i]) 
+
+        lu = (lu * ent) 
+        sumLU += lu
         if maxLU < lu:
             maxLU = lu
         
@@ -120,7 +123,7 @@ def location_uncertainty(predictions, confidences):
     weightedLU = (avgLU + maxLU + sumLU) / 3
 
 
-    return avgLU
+    return (avgLU + maxLU) / 2
 
 
 
