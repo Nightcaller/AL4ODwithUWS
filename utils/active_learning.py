@@ -27,6 +27,7 @@ def location_uncertainty(predictions, confidences):
 
     predPairs, confPairs = hungarian_clustering(predictions, confidences)
 
+    inferences = len(predictions)
     if len(predPairs) == 0:
         return 0
     
@@ -35,11 +36,11 @@ def location_uncertainty(predictions, confidences):
     avgLU = 0
 
     for i, preds in enumerate(predPairs):
-        if len(preds) < 2:
+        if len(preds) < inferences/2:
             continue
 
         meanBox = torch.mean(preds, 0)
-        lu = (1 - (torch.sum(box_iou(meanBox[None,:4], preds[:,:4])) / 10))  #* entropy(confPairs[i]) 
+        lu = (1 - (torch.sum(box_iou(meanBox[None,:4], preds[:,:4])) / inferences))  #* entropy(confPairs[i]) 
         sumLU += lu
         if maxLU < lu:
             maxLU = lu
