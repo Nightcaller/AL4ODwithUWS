@@ -430,7 +430,8 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 def parse_opt():
     parser = argparse.ArgumentParser()
     pwd = "/Users/mhpinnovation/Documents/Daniel/Master/detector/bookish-carnival/models/"
-    w = [pwd + "73.pt",pwd + "42.pt",pwd + "11.pt" ]
+    w = [pwd + "pretrained.pt"]
+    #w = [pwd + "73.pt",pwd + "42.pt",pwd + "11.pt" ]
         #,pwd + "42.pt"]
     parser.add_argument('--weights', nargs='+', type=str, default=w, help='model path(s)')
     parser.add_argument('--source', type=str, default=ROOT / 'data/images', help='file/dir/URL/glob, 0 for webcam')
@@ -463,7 +464,7 @@ def parse_opt():
     #parser.add_argument('--dropout', type=int, default=1, help='activate dropout and generate number of predicitons') #added
     # parser.add_argument('--al_random', action='store_true', help='activate random acquisition values') #added
     # parser.add_argument('--al_leastConf', action='store_true', help='activate least confidence acquisition values') #added
-    parser.add_argument('--al', default='lu_e', help='activate least confidence acquisition values') #added
+    parser.add_argument('--al', default='lu_d', help='activate least confidence acquisition values') #added
 ##########
 
     opt = parser.parse_args()
