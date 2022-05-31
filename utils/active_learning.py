@@ -8,7 +8,6 @@ from utils.metrics import box_iou
 from utils.al_helpers import kl_divergence, hungarian_clustering
 
 
-
 ############################################################################
 ############################################################################
 #########  CLASSIC METHODS #########
@@ -86,7 +85,7 @@ def cluster_entropy(predictions, confidences):
 
 ############################################################################
 ############################################################################
-#########  ADVANCED METHODS #########
+###########  ADVANCED METHODS  #############################################
 ############################################################################
 ############################################################################
 
@@ -108,8 +107,8 @@ def location_uncertainty(predictions, confidences):
 
 
         meanBox = torch.mean(preds, 0)
-        #lu = (1 - (torch.sum(box_iou(meanBox[None,:4], preds[:,:4])) / inferences))
-        lu = (1 - (torch.sum(box_iou(meanBox[None,:4], preds[:,:4])) / len(preds)))
+        lu = (1 - (torch.sum(box_iou(meanBox[None,:4], preds[:,:4])) / inferences))
+        #lu = (1 - (torch.sum(box_iou(meanBox[None,:4], preds[:,:4])) / len(preds)))
         ent = entropy(confPairs[i]) 
 
         lu = (lu * ent) 
