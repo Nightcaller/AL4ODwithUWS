@@ -125,7 +125,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         inferences = 10
         #model.apply(apply_dropout) 
                
-    if al == "lu_e":
+    if al == "lu_e" or al == "entropy_e":
         inferences = len(models)
         
     if al == "dropout":
@@ -146,7 +146,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
 
     # Run inference#
-    if al == "lu_e":
+    if al == "lu_e" or al == "entropy_e":
         for model in models:
             model.warmup(imgsz=(1, 3, *imgsz), half=half)  # warmup
     else:
@@ -179,7 +179,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         for i in range(0,inferences):                       #added
             if al == "random":
                 break
-            if al == "lu_e":
+            if al == "lu_e" or al == "entropy_e":
                 model = models[i]
             if al == "ls":
                 im = gaussian_noise(im_copy, 8 * i)
@@ -220,6 +220,8 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         if al == "entropy": 
             al_u.append((Path(path).stem, entropy(confs[0])))
         if al == "entropy_d":
+            al_u.append((Path(path).stem, cluster_entropy(predictions, confidences)))
+        if al == "entropy_e":
             al_u.append((Path(path).stem, cluster_entropy(predictions, confidences)))
         if al == "ls":
             al_u.append((Path(path).stem, location_stability(predictions)))
@@ -390,13 +392,15 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             plot_distribution(al_u, save_acq, "Entropy", names)
         if al == "entropy_d":
             plot_distribution(al_u, save_acq, "Entropy_Dropout", names)
+        if al == "entropy_e":
+            plot_distribution(al_u, save_acq, "Entropy_Ensembles", names)
     ##########
 
 def parse_opt():
     parser = argparse.ArgumentParser()
     pwd = "/Users/mhpinnovation/Documents/Daniel/Master/detector/bookish-carnival/models/"
-    w = [pwd + "pretrained.pt"]
-    #w = [pwd + "73.pt",pwd + "42.pt",pwd + "11.pt" ]
+    #w = [pwd + "pretrained.pt"]
+    w = [pwd + "73.pt",pwd + "42.pt",pwd + "11.pt" ]
         #,pwd + "42.pt"]
     parser.add_argument('--weights', nargs='+', type=str, default=w, help='model path(s)')
     parser.add_argument('--source', type=str, default=ROOT / 'data/images', help='file/dir/URL/glob, 0 for webcam')
@@ -429,7 +433,7 @@ def parse_opt():
     #parser.add_argument('--dropout', type=int, default=1, help='activate dropout and generate number of predicitons') #added
     # parser.add_argument('--al_random', action='store_true', help='activate random acquisition values') #added
     # parser.add_argument('--al_leastConf', action='store_true', help='activate least confidence acquisition values') #added
-    parser.add_argument('--al', default='entropy_d', help='activate least confidence acquisition values') #added
+    parser.add_argument('--al', default='entropy_e', help='activate least confidence acquisition values') #added
 ##########
 
     opt = parser.parse_args()
