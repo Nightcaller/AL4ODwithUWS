@@ -152,11 +152,6 @@ def plot_results(expPaths, subPaths ,file, savePath, n, colors, xLabel, labels):
 
 
 
-
-
-
-
-
 #Edit for more Lines 
 def save_text(values, save_dir, fileName):
     save_dir = save_dir + "/" + fileName + ".txt"
@@ -169,7 +164,7 @@ def save_text(values, save_dir, fileName):
             else:
                 val = value[1]
 
-                
+
             if len(value) == 2:
                 f.write( value[0] + " " + str(val) + "\n")
             if len(value) == 3:
@@ -234,7 +229,7 @@ def kl_divergence(p, q):
 	return sum(p[i] * torch.log2(p[i]/q[i]) for i in range(len(p)))
 
 
-def hungarian_clustering(predictions, confidences = -1):
+def hungarian_clustering(predictions, confidences = -1, threshold = 0):
 
     objects = []
     confs = []
@@ -272,7 +267,7 @@ def hungarian_clustering(predictions, confidences = -1):
 
             if(sum(ious) == 0):                     
                 continue
-            if(box[5] == objects[index][0][5] ):    #add to existing cluster
+            if(box[5] == objects[index][0][5] and maxIoU >= threshold):    #add to existing cluster
                 objects[index] = torch.cat((objects[index], box[None,:]), 0) 
                 if confidences != -1:
                     confs[index] = torch.cat((confs[index], confidences[j][k][None,:]), 0) 

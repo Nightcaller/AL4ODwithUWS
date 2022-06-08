@@ -185,7 +185,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                 im = gaussian_noise(im_copy, 8 * i)
             if al == "ral" and i > 0:
                 im = im.flip(-1)
-            if (al == "lu_d" or al == "entropy_d") and i > 1:
+            if (al == "lu_d" or al == "entropy_d") and i >= 1:
                 model.apply(apply_dropout) 
 
             visualize = increment_path(save_dir / Path(path).stem, mkdir=True) if visualize else False
@@ -240,7 +240,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         ###########
 
         # Process predictions
-        for objN ,prediction in enumerate(predictions):
+        for objN ,prediction in enumerate(predictions[::-1]):
             #if al == "dropout" and singleObject:              #added
             #    im0 = im0s.copy()               #added
 
@@ -286,8 +286,9 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                     #    n = (det[:, -1] == c).sum()  # detections per class
                         #s += f"{n} {names[int(c)]}{'s' * (n > 1)}, "  # add to string
 
+
+
                     # Write results
-                    
                     for *xyxy, conf, cls in reversed(det):
                         #i == (len(prediction)-1) => so only the mean label is saved 
                         if save_txt and i == (len(prediction)-1):  # Write to file
@@ -301,10 +302,16 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                             c = int(cls)  # integer class
 
                             # mean label is annotated
-                            if(i == (len(prediction)-1) and  al == "dropout"):
+                            #if(i == (len(prediction)-1) and  al == "dropout"):
+                            #    label = f'{len(prediction)-1} | {conf:.2f}' 
+                            #    annotator = Annotator(im0, line_width=2, example=str(names))
+                            #    annotator.box_label(xyxy, label, (0,0,0)) #black box
+
+                            #Reference label
+                            if(objN == len(predictions)-1 and  (al == "lu_d" or al == "entropy_d" or al == "ral" )):
                                 label = f'{len(prediction)-1} | {conf:.2f}' 
                                 annotator = Annotator(im0, line_width=2, example=str(names))
-                                annotator.box_label(xyxy, label, (0,0,0)) #black box
+                                annotator.box_label(xyxy, label, (50,205,50)) #limegreen box
                             #Dropoutlabels
                             else:
                                 label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
@@ -434,7 +441,7 @@ def parse_opt():
     #parser.add_argument('--dropout', type=int, default=1, help='activate dropout and generate number of predicitons') #added
     # parser.add_argument('--al_random', action='store_true', help='activate random acquisition values') #added
     # parser.add_argument('--al_leastConf', action='store_true', help='activate least confidence acquisition values') #added
-    parser.add_argument('--al', default='entropy', help='activate least confidence acquisition values') #added
+    parser.add_argument('--al', default='lu_d', help='activate least confidence acquisition values') #added
 ##########
 
     opt = parser.parse_args()
