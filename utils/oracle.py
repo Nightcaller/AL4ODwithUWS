@@ -195,7 +195,7 @@ def autOracle(gtPath, savePath= None,  acqPath=None, predPath=None, cycle="0"):
     # hit no => calc time to redraw
     labelingTimeTotal = labelingTimeAL + labelingTimeSSL
     if(os.path.exists(savePath)):
-        
+        #("Run,","AL Time in Hours, SSL Time in Hours, Hits, Part Hits, Misses, NewDraws"), 
         saveText = [
             (str(cycle[-1]) + " ," ,str(labelingTimeAL / 3600) + "," + str(labelingTimeSSL / 3600) + "," + str(hTotal) + ", " + str(phTotal)+  ", " + str(missTotal) + ", " + str(drawTotal) )
         ]

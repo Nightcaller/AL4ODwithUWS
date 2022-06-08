@@ -367,6 +367,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
     if al != "none":    
         al_u.sort(key=lambda x:x[1])
         save_text(al_u, save_acq, "uncertainty")
+
         #Random                                           
         if al == "random":
             plot_distribution(al_u, save_acq, "Random_Sampling", names)
@@ -399,7 +400,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 def parse_opt():
     parser = argparse.ArgumentParser()
     pwd = "/Users/mhpinnovation/Documents/Daniel/Master/detector/bookish-carnival/models/"
-    w = [pwd + "pretrained.pt"]
+    w = [pwd + "11.pt"]
     #w = [pwd + "73.pt",pwd + "42.pt",pwd + "11.pt" ]
         #,pwd + "42.pt"]
     parser.add_argument('--weights', nargs='+', type=str, default=w, help='model path(s)')
