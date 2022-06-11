@@ -194,13 +194,15 @@ def autOracle(gtPath, savePath= None,  acqPath=None, predPath=None, cycle="0"):
     # hit yes but bad => calc time to correct
     # hit no => calc time to redraw
     labelingTimeTotal = labelingTimeAL + labelingTimeSSL
-    if(os.path.exists(savePath)):
-        #("Run,","AL Time in Hours, SSL Time in Hours, Hits, Part Hits, Misses, NewDraws"), 
-        saveText = [
-            (str(cycle[-1]) + " ," ,str(labelingTimeAL / 3600) + "," + str(labelingTimeSSL / 3600) + "," + str(hTotal) + ", " + str(phTotal)+  ", " + str(missTotal) + ", " + str(drawTotal) )
-        ]
+    if not (os.path.exists(savePath)):
+        os.makedirs(savePath)
 
-        save_text(saveText, savePath, "oracle")
+    #("Run,","AL Time in Hours, SSL Time in Hours, Hits, Part Hits, Misses, NewDraws"), 
+    saveText = [
+        (str(cycle[-1]) + " ," ,str(labelingTimeAL / 3600) + "," + str(labelingTimeSSL / 3600) + "," + str(hTotal) + ", " + str(phTotal)+  ", " + str(missTotal) + ", " + str(drawTotal) )
+    ]
+
+    save_text(saveText, savePath, "oracle")
 
     print("Total Labeling Time: " + str(labelingTimeTotal / 3600) + " Hours")
     print("AL Labeling Time: " + str(labelingTimeAL / 3600) + " Hours")
