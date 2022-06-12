@@ -233,19 +233,8 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         #added
         im0 = im0s.copy()   # to annotate every pred on same image  
 
-
-
-        #if(al != "dropout" or al != "random"):
-        #    predictions = predictions[0]
-        ###########
-
         # Process predictions
         for objN ,prediction in enumerate(predictions[::-1]):
-            #if al == "dropout" and singleObject:              #added
-            #    im0 = im0s.copy()               #added
-
-            # if al != "dropout":
-            #     prediction = prediction[0]
 
             for i, det in enumerate(prediction):  # per image
 
@@ -404,7 +393,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             plot_distribution(al_u, save_acq, "Entropy_Ensembles", names)
     ##########
 
-def parse_opt():
+def parse_opt(known=False):
     parser = argparse.ArgumentParser()
     pwd = "/Users/mhpinnovation/Documents/Daniel/Master/detector/bookish-carnival/models/"
     w = [pwd + "11.pt"]
@@ -444,7 +433,7 @@ def parse_opt():
     parser.add_argument('--al', default='lu_d', help='activate least confidence acquisition values') #added
 ##########
 
-    opt = parser.parse_args()
+    opt = parser.parse_known_args()[0] if known else parser.parse_args()
     opt.imgsz *= 2 if len(opt.imgsz) == 1 else 1  # expand
     print_args(FILE.stem, opt)
     return opt
