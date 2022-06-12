@@ -396,7 +396,8 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 def parse_opt(known=False):
     parser = argparse.ArgumentParser()
     pwd = "/Users/mhpinnovation/Documents/Daniel/Master/detector/bookish-carnival/models/"
-    w = [pwd + "11.pt"]
+    #w = [pwd + "11.pt"]
+    test = "/content/bookish-carnival/models/11.pt"
     #w = [pwd + "73.pt",pwd + "42.pt",pwd + "11.pt" ]
         #,pwd + "42.pt"]
     parser.add_argument('--weights', nargs='+', type=str, default=w, help='model path(s)')
