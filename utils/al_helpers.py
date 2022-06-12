@@ -228,6 +228,10 @@ def flip_predicitions(image, pred):
 def kl_divergence(p, q):
 	return sum(p[i] * torch.log2(p[i]/q[i]) for i in range(len(p)))
 
+def js_divergence(p, q): 
+    m = 0.5 * (p + q) 
+    return 0.5 * kl_divergence(p, m) + 0.5 * kl_divergence(q, m)
+
 
 def hungarian_clustering(predictions, confidences = -1, threshold = 0):
 

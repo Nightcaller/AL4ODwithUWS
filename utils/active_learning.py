@@ -5,7 +5,7 @@ import torch
 import numpy as np
 
 from utils.metrics import box_iou
-from utils.al_helpers import kl_divergence, hungarian_clustering
+from utils.al_helpers import js_divergence, kl_divergence, hungarian_clustering
 
 
 ############################################################################
@@ -136,20 +136,22 @@ def location_uncertainty(predictions, confidences):
     maxLU = 0
     avgLU = 0
 
+    
+
     for i, preds in enumerate(predPairs):
         if len(preds) < inferences/2:
             continue
 
-
+        jsDiv = sum(js_divergence(confPairs[i][0], confPairs[i][j]) for j in range(1,len(preds)-1 )) / len(preds)
         #meanBox = torch.mean(preds, 0)
         lu = (1 - (torch.sum(box_iou(preds[None, 0,:4], preds[1:,:4])) / inferences))
         #lu = (1 - (torch.sum(box_iou(meanBox[None,:4], preds[:,:4])) / len(preds)))
         ent = entropy(confPairs[i]) 
 
-        lu = (lu * ent) 
+        lu = lu * jsDiv
+        #lu = lu * ent
         sumLU += lu
-        if maxLU < lu:
-            maxLU = lu
+        maxLU = max(lu,maxLU)
         
         
     avgLU = sumLU / len(predPairs)
@@ -158,7 +160,8 @@ def location_uncertainty(predictions, confidences):
 
 
     return (avgLU + maxLU) / 2
-
+    #return maxLU
+    #return avgLU
 
 def location_stability(predictions):
 
@@ -195,6 +198,8 @@ def robustness(predictions, confidences):
         return 0
 
     classConsistency, entrop, validPairs = 0, 0, 0
+
+
     
     for i, pair in enumerate(confPairs):
 
@@ -207,6 +212,7 @@ def robustness(predictions, confidences):
         pq = kl_divergence(pair[0],pair[1])
         qp = kl_divergence(pair[1],pair[0])
 
+        
         classConsistency += 0.5 * (pq+qp)
         entrop += entropy(pair)
         validPairs += 1
@@ -216,6 +222,11 @@ def robustness(predictions, confidences):
 
     classConsistency = classConsistency  / validPairs
     entrop = entrop  / validPairs
+    print("NEW:")
+
+    print(str(classConsistency) + " " + str(entrop))
+    print(classConsistency * entrop)
+    print("##################################")
 
     return classConsistency * entrop
 
