@@ -400,7 +400,7 @@ def parse_opt(known=False):
     test = "/content/bookish-carnival/models/11.pt"
     #w = [pwd + "73.pt",pwd + "42.pt",pwd + "11.pt" ]
         #,pwd + "42.pt"]
-    parser.add_argument('--weights', nargs='+', type=str, default=w, help='model path(s)')
+    parser.add_argument('--weights', nargs='+', type=str, default=test, help='model path(s)')
     parser.add_argument('--source', type=str, default=ROOT / 'data/images', help='file/dir/URL/glob, 0 for webcam')
     parser.add_argument('--imgsz', '--img', '--img-size', nargs='+', type=int, default=[640], help='inference size h,w')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='confidence threshold')
