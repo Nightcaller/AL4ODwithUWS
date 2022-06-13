@@ -225,7 +225,6 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         if al == "ls":
             al_u.append((Path(path).stem, location_stability(predictions)))
         if al == "ral":
-            print(str(Path(path).stem))
             al_u.append((Path(path).stem, robustness(predictions, confidences)))
 
 
