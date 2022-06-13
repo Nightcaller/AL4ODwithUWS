@@ -85,9 +85,6 @@ def plot_results(expPaths, subPaths ,file, savePath, n, colors, xLabel, labels):
     fig, ax = plt.subplots()
     plots = []
 
-    
-    
-
     for j, exp in enumerate(expPaths):
  
         results = []

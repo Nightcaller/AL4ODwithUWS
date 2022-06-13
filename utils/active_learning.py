@@ -200,7 +200,6 @@ def robustness(predictions, confidences):
     classConsistency, entrop, validPairs = 0, 0, 0
 
 
-    
     for i, pair in enumerate(confPairs):
 
         if len(pair) <= 1:
@@ -222,11 +221,6 @@ def robustness(predictions, confidences):
 
     classConsistency = classConsistency  / validPairs
     entrop = entrop  / validPairs
-    print("NEW:")
-
-    print(str(classConsistency) + " " + str(entrop))
-    print(classConsistency * entrop)
-    print("##################################")
 
     return classConsistency * entrop
 
