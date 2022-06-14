@@ -170,11 +170,14 @@ def autOracle(gtPath, savePath= None,  acqPath=None, predPath=None, cycle="0"):
 
         labelingTime, h, ph, miss, draw = calcLabelingTime(hits)
 
-        
-        if acqType[i] == "al":
-            labelingTimeAL += labelingTime
+        if(predPath is not None):
+            if acqType[i] == "al":
+                labelingTimeAL += labelingTime
+            else:
+                labelingTimeSSL += labelingTime
         else:
-            labelingTimeSSL += labelingTime
+            labelingTimeAL += labelingTime
+
 
         hTotal += h
         phTotal += ph
