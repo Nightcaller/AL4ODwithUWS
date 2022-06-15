@@ -54,7 +54,7 @@ def entropy(confs):
     
     entropies = 0
 
-    for conf in confs[0]:
+    for conf in confs:
         logProbs = torch.mul(conf ,torch.log2(conf))
         numerator = torch.sub(torch.tensor(0), torch.sum(logProbs))
         denom = torch.log2(classes)
