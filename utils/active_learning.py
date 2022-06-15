@@ -88,42 +88,6 @@ def cluster_entropy(predictions, confidences):
 ############################################################################
 ############################################################################
 
-def old_location_uncertainty(predictions, confidences):
-
-    predPairs, confPairs = hungarian_clustering(predictions, confidences)
-
-    inferences = len(predictions)
-    if len(predPairs) < 1:
-        return 0
-    
-    sumLU = 0
-    maxLU = 0
-    avgLU = 0
-
-    for i, preds in enumerate(predPairs):
-        if len(preds) < inferences/2:
-            continue
-
-
-        meanBox = torch.mean(preds, 0)
-        lu = (1 - (torch.sum(box_iou(meanBox[None,:4], preds[:,:4])) / inferences))
-        #lu = (1 - (torch.sum(box_iou(meanBox[None,:4], preds[:,:4])) / len(preds)))
-        ent = entropy(confPairs[i]) 
-
-        lu = (lu * ent) 
-        sumLU += lu
-        if maxLU < lu:
-            maxLU = lu
-        
-        
-    avgLU = sumLU / len(predPairs)
-
-    weightedLU = (avgLU + maxLU + sumLU) / 3
-
-
-    return (avgLU + maxLU) / 2
-
-
 def location_uncertainty(predictions, confidences):
 
     predPairs, confPairs = hungarian_clustering(predictions, confidences, 0.3)
@@ -536,3 +500,42 @@ def cluster_lc(obj):
 
 
     return 1 - torch.min(obj[:,4])
+
+
+
+
+def old_location_uncertainty(predictions, confidences):
+
+    predPairs, confPairs = hungarian_clustering(predictions, confidences)
+
+    inferences = len(predictions)
+    if len(predPairs) < 1:
+        return 0
+    
+    sumLU = 0
+    maxLU = 0
+    avgLU = 0
+
+    for i, preds in enumerate(predPairs):
+        if len(preds) < inferences/2:
+            continue
+
+
+        meanBox = torch.mean(preds, 0)
+        lu = (1 - (torch.sum(box_iou(meanBox[None,:4], preds[:,:4])) / inferences))
+        #lu = (1 - (torch.sum(box_iou(meanBox[None,:4], preds[:,:4])) / len(preds)))
+        ent = entropy(confPairs[i]) 
+
+        lu = (lu * ent) 
+        sumLU += lu
+        if maxLU < lu:
+            maxLU = lu
+        
+        
+    avgLU = sumLU / len(predPairs)
+
+    weightedLU = (avgLU + maxLU + sumLU) / 3
+
+
+    return (avgLU + maxLU) / 2
+

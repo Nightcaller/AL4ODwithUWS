@@ -95,7 +95,3 @@ def selection(acqSource, source, target, threshold, modes, n=2500,dynamic=False)
 
     return success
 
-
-
-
-
