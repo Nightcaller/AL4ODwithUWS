@@ -28,15 +28,19 @@ def moveSelection(imageNames, sourceDir, targetDir):
 
 
 #acqSource, Move From, To, How much percent, pickFrom (top,bot,mid), AL Strat (DropoutUncertainty, Random, leastConfidence)
-def selection(acqSource, source, target, threshold, modes, n=2500,dynamic=False):
+def selection(acqSource, source, target, threshold, modes, n=2500,dynamic=False, alSplit=0.5):
     from bisect import bisect_left
 
     acq = loadFile(acqSource + "/uncertainty.txt")
     
+    if len(modes) == 1:
+        alSplit = 1
 
     selection = []
     allDataN = len(acq)
-    acqMax = n/len(modes)
+    acqMax = n * alSplit
+    acqSSL = n * (1 - alSplit)
+    acqAL = n * alSplit
     acq = [a for a in acq if float(a[1]) != 0 and float(a[1]) != 1] #delete all 0 and 1 
     acqN = len(acq)
 
@@ -60,8 +64,8 @@ def selection(acqSource, source, target, threshold, modes, n=2500,dynamic=False)
     print("Selection from : " + str(allDataN))
     if any("ssl" in s for s in modes):
         
-        if (sslIndex-smallestValueIndex > acqMax):
-            sslIndex = smallestValueIndex + acqMax
+        if (sslIndex-smallestValueIndex > acqSSL):
+            sslIndex = smallestValueIndex + acqSSL
  
         sslSelection = acq[smallestValueIndex:sslIndex]
         for s in sslSelection:
@@ -70,8 +74,8 @@ def selection(acqSource, source, target, threshold, modes, n=2500,dynamic=False)
         print("Pseudo Labeling: " + str(sslIndex-smallestValueIndex))
 
     if any("al" in s for s in modes):
-        if(acqN-alIndex > acqMax):
-            alIndex = acqN-acqMax
+        if(acqN-alIndex > acqAL):
+            alIndex = acqN-acqAL
 
         alSelection = acq[alIndex:]
         for s in alSelection:
