@@ -121,7 +121,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         #activate dropout layers
 
     if al == "lu_d" or al == "entropy_d":
-        inferences = 15
+        inferences = 10
         #model.apply(apply_dropout) 
                
     if al == "lu_e" or al == "entropy_e":
@@ -210,8 +210,14 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         # Select random    
         if al == "random":
             al_u.append((Path(path).stem, random_sampling()))
-        if al == "lu_d" or al == "lu_e":
+        if al == "lu_d":
             al_u.append((Path(path).stem, location_uncertainty(predictions, confidences)))
+        if al == "lu_e":
+
+            #add mean box at predictions[0] as ref box 
+            #al_u.append((Path(path).stem, location_uncertainty(predictions, confidences)))
+            print("not implemented")
+            break
         if al == "lc":
             al_u.append((Path(path).stem, least_confidence(pred[0])))
         if al == "margin":

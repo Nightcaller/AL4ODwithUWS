@@ -88,12 +88,14 @@ def cluster_entropy(predictions, confidences):
 ############################################################################
 ############################################################################
 
+
+
 def location_uncertainty(predictions, confidences):
 
-    predPairs, confPairs = hungarian_clustering(predictions, confidences, 0.3)
+    objects, confPairs = hungarian_clustering(predictions, confidences, 0.3)
 
     inferences = len(predictions)
-    if len(predPairs) < 1:
+    if len(objects) < 1:
         return 0
     
     sumLU = 0
@@ -102,13 +104,13 @@ def location_uncertainty(predictions, confidences):
 
     
 
-    for i, preds in enumerate(predPairs):
+    for i, preds in enumerate(objects):
         if len(preds) < inferences/2:
             continue
 
         jsDiv = sum(js_divergence(confPairs[i][0], confPairs[i][j]) for j in range(1,len(preds)-1 )) / len(preds)
         #meanBox = torch.mean(preds, 0)
-        lu = (1 - (torch.sum(box_iou(preds[None, 0,:4], preds[1:,:4])) / inferences))
+        lu = (1 - (torch.sum(box_iou(preds[None, 0,:4], preds[1:,:4])) / len(preds)))
         #lu = (1 - (torch.sum(box_iou(meanBox[None,:4], preds[:,:4])) / len(preds)))
         ent = entropy(confPairs[i]) 
 
@@ -118,7 +120,7 @@ def location_uncertainty(predictions, confidences):
         maxLU = max(lu,maxLU)
         
         
-    avgLU = sumLU / len(predPairs)
+    avgLU = sumLU / len(objects)
 
     weightedLU = (avgLU + maxLU + sumLU) / 3
 
@@ -506,17 +508,17 @@ def cluster_lc(obj):
 
 def old_location_uncertainty(predictions, confidences):
 
-    predPairs, confPairs = hungarian_clustering(predictions, confidences)
+    objects, confPairs = hungarian_clustering(predictions, confidences)
 
     inferences = len(predictions)
-    if len(predPairs) < 1:
+    if len(objects) < 1:
         return 0
     
     sumLU = 0
     maxLU = 0
     avgLU = 0
 
-    for i, preds in enumerate(predPairs):
+    for i, preds in enumerate(objects):
         if len(preds) < inferences/2:
             continue
 
@@ -532,7 +534,7 @@ def old_location_uncertainty(predictions, confidences):
             maxLU = lu
         
         
-    avgLU = sumLU / len(predPairs)
+    avgLU = sumLU / len(objects)
 
     weightedLU = (avgLU + maxLU + sumLU) / 3
 

@@ -17,9 +17,8 @@ def selectionOverlap(selection1, selection2):
 
     fileNames1 = [file[0] for file in s1]
     fileNames2 = [file[0] for file in s2]
-    for file in fileNames1:
-        if file in fileNames2:
-            overlap += 1
+
+    overlap = len(set(fileNames1).intersection(fileNames2))
 
     return overlap/size
 
