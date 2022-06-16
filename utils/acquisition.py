@@ -34,11 +34,14 @@ def selection(acqSource, source, target, threshold, modes, n=2500,dynamic=False,
     acq = loadFile(acqSource + "/uncertainty.txt")
     
     if len(modes) == 1:
-        alSplit = 1
+        if any("ssl" in s for s in modes):
+            alSplit = 0
+        else:
+            alSplit = 1
 
     selection = []
     allDataN = len(acq)
-    acqMax = n * alSplit
+    #acqMax = n * alSplit
     acqSSL = n * (1 - alSplit)
     acqAL = n * alSplit
     acq = [a for a in acq if float(a[1]) != 0 and float(a[1]) != 1] #delete all 0 and 1 
@@ -56,8 +59,8 @@ def selection(acqSource, source, target, threshold, modes, n=2500,dynamic=False,
         sslIndex = bisect_left(valuesWithZero, sslQuantil)
         alIndex = bisect_left(valuesWithZero, alQuantil)
     else:
-        sslIndex = int(smallestValueIndex + acqMax)
-        alIndex =  int(acqN-acqMax)
+        sslIndex = int(smallestValueIndex + acqSSL)
+        alIndex =  int(acqN-acqAL)
 
     
 
