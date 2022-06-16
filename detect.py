@@ -84,8 +84,15 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
     # Load model
     device = select_device(device)
-    models = []
+
+    #for some reason locally following argument is a list and on collab its a string
+    # --weights /path/to/model1 /path/to/model2
     if isinstance(weights,str):
+        weights = weights.split()
+
+    models = []
+    if len(weights) == 1:
+        weights = weights[0]
         model = DetectMultiBackend(weights, device=device, dnn=dnn)
         stride, names, pt, jit, onnx, engine = model.stride, model.names, model.pt, model.jit, model.onnx, model.engine
         imgsz = check_img_size(imgsz, s=stride)  # check image size
@@ -398,8 +405,8 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 def parse_opt(known=False):
     parser = argparse.ArgumentParser()
     pwd = "/Users/mhpinnovation/Documents/Daniel/Master/detector/bookish-carnival/models/"
-    w = pwd + "11.pt"
-    #w = [pwd + "73.pt",pwd + "42.pt",pwd + "11.pt" ]
+    #w = pwd + "11.pt"
+    w = pwd + "73.pt",pwd + "42.pt",pwd + "11.pt" 
         #,pwd + "42.pt"]
         #
     parser.add_argument('--weights', nargs='+', type=str, default=w, help='model path(s)')
