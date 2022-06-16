@@ -65,7 +65,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         hide_conf=False,  # hide confidences
         half=False,  # use FP16 half-precision inference
         dnn=False,  # use OpenCV DNN for ONNX inference
-      #  dropout=1,
+        dropout=10,
       #  al_leastConf=False,
        # al_random=False,
         al='none',
@@ -121,7 +121,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         #activate dropout layers
 
     if al == "lu_d" or al == "entropy_d":
-        inferences = 10
+        inferences = dropout
         #model.apply(apply_dropout) 
                
     if al == "lu_e" or al == "entropy_e":
@@ -377,9 +377,6 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             plot_distribution(al_u, save_acq, "Location_Uncertainty_Dropout", names)
         if al == "lu_e":
             plot_distribution(al_u, save_acq, "Location_Uncertainty_Ensembles", names)
-        #Uncertainty 
-        if al == "dropout":
-            plot_distribution(al_u, save_acq, "Dropout_Uncertainty", names)
         #least Confidence
         if al == "lc":
             plot_distribution(al_u, save_acq, "Least_Confidence", names)
@@ -433,7 +430,7 @@ def parse_opt(known=False):
 
 ##########
     #added arguments for AL Strategies
-    #parser.add_argument('--dropout', type=int, default=1, help='activate dropout and generate number of predicitons') #added
+    parser.add_argument('--dropout', type=int, default=10, help='how many inferences should be run in case of dropout al detection') #added
     # parser.add_argument('--al_random', action='store_true', help='activate random acquisition values') #added
     # parser.add_argument('--al_leastConf', action='store_true', help='activate least confidence acquisition values') #added
     parser.add_argument('--al', default='lu_d', help='activate least confidence acquisition values') #added
