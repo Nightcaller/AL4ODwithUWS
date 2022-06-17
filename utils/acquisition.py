@@ -42,7 +42,7 @@ def selection(acqSource, source, target, threshold, modes, n=2500,dynamic=False,
     selection = []
     allDataN = len(acq)
     #acqMax = n * alSplit
-    acqSSL = n * (1 - alSplit)
+    acqSSL = n * round(1 - alSplit,2)
     acqAL = n * alSplit
     acq = [a for a in acq if float(a[1]) != 0 and float(a[1]) != 1] #delete all 0 and 1 
     acqN = len(acq)
