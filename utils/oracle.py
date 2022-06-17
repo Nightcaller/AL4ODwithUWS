@@ -126,8 +126,7 @@ def create_pseudo_label(hits,indices, gt, pred, threshold):
 
 def save_pseudo_label(gtPath, fileName, gtLabels):
     gtLabels = xyxy2xywh(gtLabels[:-1])
-    print(gtPath + "/000000000000" + fileName + 'NEW.txt')
-    with open(gtPath + "/" + fileName + '.txt', 'a') as f:
+    with open(gtPath + "/labels/" + fileName + '.txt', 'w') as f:
 
         for label in gtLabels:
             label = label.numpy().tolist()
