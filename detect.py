@@ -125,23 +125,16 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
     
 #########                                        #added 
     inferences = 1                 
-        #activate dropout layers
-
     if al == "lu_d" or al == "entropy_d":
-        inferences = dropout
-        #model.apply(apply_dropout) 
-               
+        inferences = dropout   
     if al == "lu_e" or al == "entropy_e":
-        inferences = len(models)
-        
-    if al == "dropout":
-        model.apply(apply_dropout) 
-        inferences = 10
-    #Overhead for any AL Strategies 
+        inferences = len(models)    
     if al == "ls":
         inferences = 7              # one reference image 6 levels of noise
     if al == "ral":
         inferences = 2              # reference + horizontal flip
+
+#Overhead for any AL Strategies 
     if al != "none":                                
         save_acq = str(save_dir / 'acquisition' )
         (save_dir / 'acquisition').mkdir(parents=True, exist_ok=True)
@@ -405,8 +398,8 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 def parse_opt(known=False):
     parser = argparse.ArgumentParser()
     pwd = "/Users/mhpinnovation/Documents/Daniel/Master/detector/bookish-carnival/models/"
-    #w = pwd + "11.pt"
-    w = pwd + "73.pt",pwd + "42.pt",pwd + "11.pt" 
+    w = pwd + "11.pt"
+    #w = pwd + "73.pt",pwd + "42.pt",pwd + "11.pt" 
         #,pwd + "42.pt"]
         #
     parser.add_argument('--weights', nargs='+', type=str, default=w, help='model path(s)')

@@ -4,6 +4,8 @@ import numpy as np
 import torch
 import os
 
+print(os.getcwd())
+
 from utils.general import xywh2xyxy, xyxy2xywh
 from utils.metrics import box_iou
 from utils.acquisition import loadFile
@@ -62,23 +64,26 @@ def compare(gt, pred, name):
         return []
 
     hits = torch.zeros(len(gt))
-    
+    indices = [-1] * len(gt)
+
+
     ious = box_iou(pred[:,:4], gt[:,:4])
 
 
     for i, iou in enumerate(ious):
         maxIoU = torch.max(iou)
-        index = (iou == maxIoU).nonzero(as_tuple=False)[0]
+        gtIndex = (iou == maxIoU).nonzero(as_tuple=False)[0]
 
        
         #check if classes match
-        if (pred[i,4] == gt[index,4] or maxIoU == 0):
-            hits[index] = maxIoU
+        if (pred[i,4] == gt[gtIndex,4] or maxIoU == 0):
+            hits[gtIndex] = maxIoU
+            indices[gtIndex] = i
         else:
             #TODO Handle by setting index to 0 and repeat step
             print("Wrong class")
   
-    return hits
+    return hits, indices
 
 
 def calcLabelingTime(hits):
@@ -111,17 +116,17 @@ def calcLabelingTime(hits):
     return labelingTime, h, ph, miss, draw
 
 
-def create_pseudo_label(hits, gt, pred, threshold):
+def create_pseudo_label(hits,indices, gt, pred, threshold):
 
     for i, hit in enumerate(hits):
         if hit >= threshold:
-            gt[i] = pred[i]
+            gt[i] = pred[indices[i]]
 
     return gt
 
 def save_pseudo_label(gtPath, fileName, gtLabels):
     gtLabels = xyxy2xywh(gtLabels[:-1])
-    with open(gtPath + fileName + '.txt', 'a') as f:
+    with open(gtPath + "/" + fileName + '.txt', 'a') as f:
 
         for label in gtLabels:
             label = label.numpy().tolist()
@@ -163,9 +168,10 @@ def autOracle(gtPath, savePath= None,  acqPath=None, predPath=None, cycle="0"):
             #annotate all images with full time
             hits = torch.zeros(len(gtLabels[i]))
         else:
-            hits = compare(gtLabels[i], predLabels[i], name)
+            hits, indices = compare(gtLabels[i], predLabels[i], name)
+            print(hits)
             if acqType[i] == "ssl" and max(hits) >= pseudo_label_threshold:
-                gtLabels[i] = create_pseudo_label(hits, gtLabels[i], predLabels[i], pseudo_label_threshold)
+                gtLabels[i] = create_pseudo_label(hits, indices,gtLabels[i], predLabels[i], pseudo_label_threshold)
                 save_pseudo_label(gtPath, name, gtLabels[i])
 
         labelingTime, h, ph, miss, draw = calcLabelingTime(hits)
@@ -213,3 +219,12 @@ def autOracle(gtPath, savePath= None,  acqPath=None, predPath=None, cycle="0"):
     print("Hits: " + str(hTotal) + " - " + "Part Hits: " + str(phTotal) + " - " + "Misses: " + str(missTotal) + " - " + "New Draws: " + str(drawTotal) )
 
     return labelingTimeTotal
+
+
+
+if __name__ == "__main__":
+    
+    gtPath = "/Users/mhpinnovation/Documents/Daniel/Master/datasets/AcqTest"
+    predPath = "/Users/mhpinnovation/Documents/Daniel/Master/detector/bookish-carnival/runs/detect/exp473"
+    acqFile = "/Users/mhpinnovation/Documents/Daniel/Master/detector/bookish-carnival/runs/detect/exp473/acquisition"
+    autOracle(gtPath, gtPath, acqFile, predPath, "")

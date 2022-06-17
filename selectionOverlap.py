@@ -33,7 +33,8 @@ if __name__ == "__main__":
     #sel2 = "/Users/mhpinnovation/Documents/Daniel/Master/detector/bookish-carnival/runs/detect/exp455/acquisition/selection.txt"
 
     #14 Dropout Inferences
-    sel1 = "/Users/mhpinnovation/Documents/Daniel/Master/detector/bookish-carnival/overlap/LU0/acquisition/selection.txt"
-    sel2 = "/Users/mhpinnovation/Documents/Daniel/Master/detector/bookish-carnival/overlap/LU1/acquisition/selection.txt"
+    sel0 = "/Users/mhpinnovation/Documents/Daniel/Master/detector/bookish-carnival/overlap/LU0d30/acquisition/selection.txt"
+    sel1 = "/Users/mhpinnovation/Documents/Daniel/Master/detector/bookish-carnival/overlap/LU1d3/acquisition/selBig.txt"
+    sel2 = "/Users/mhpinnovation/Documents/Daniel/Master/detector/bookish-carnival/overlap/LU2d3/acquisition/selBig.txt"
 
     print(selectionOverlap(sel1,sel2))
