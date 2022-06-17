@@ -61,7 +61,7 @@ def loadLabels(labelPath, files=None):
 def compare(gt, pred, name):
 
     if(not len(gt) or not len(pred)):
-        return []
+        return [], []
 
     hits = torch.zeros(len(gt))
     indices = [-1] * len(gt)
