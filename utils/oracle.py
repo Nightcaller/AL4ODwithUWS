@@ -169,9 +169,10 @@ def autOracle(gtPath, savePath= None,  acqPath=None, predPath=None, cycle="0"):
             hits = torch.zeros(len(gtLabels[i]))
         else:
             hits, indices = compare(gtLabels[i], predLabels[i], name)
-            if acqType[i] == "ssl" and max(hits) >= pseudo_label_threshold:
-                gtLabels[i] = create_pseudo_label(hits, indices,gtLabels[i], predLabels[i], pseudo_label_threshold)
-                save_pseudo_label(gtPath, name, gtLabels[i])
+            if len(hits):
+                if acqType[i] == "ssl" and max(hits) >= pseudo_label_threshold:
+                    gtLabels[i] = create_pseudo_label(hits, indices,gtLabels[i], predLabels[i], pseudo_label_threshold)
+                    save_pseudo_label(gtPath, name, gtLabels[i])
 
         labelingTime, h, ph, miss, draw = calcLabelingTime(hits)
 
