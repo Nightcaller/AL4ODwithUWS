@@ -216,7 +216,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                 imageScore = 0
                 objectScores = [0]
             else:
-                print(result)
+                #print(result)
                 imageScore, objectScores = result
 
             al_u.append((Path(path).stem, imageScore))
