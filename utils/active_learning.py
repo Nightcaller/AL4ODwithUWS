@@ -126,8 +126,6 @@ def location_uncertainty(predictions, confidences):
 
     weightedLU = (avgLU + maxLU + sumLU) / 3
 
-    print(objScores)
-    
     return (avgLU + maxLU) / 2 , objScores
     #return maxLU
     #return avgLU
