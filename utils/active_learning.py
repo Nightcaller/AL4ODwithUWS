@@ -95,9 +95,10 @@ def location_uncertainty(predictions, confidences):
     objects, confPairs = hungarian_clustering(predictions, confidences, 0.3)
 
     inferences = len(predictions)
-    objScores = [0]*len(objects)
+    objScores = [0] * len(objects)
+
     if len(objects) < 1:
-        return (0, 0)
+        return None
     
     sumLU = 0
     maxLU = 0
@@ -125,8 +126,9 @@ def location_uncertainty(predictions, confidences):
 
     weightedLU = (avgLU + maxLU + sumLU) / 3
 
-
-    return (avgLU + maxLU) / 2, objScores
+    print(objScores)
+    
+    return (avgLU + maxLU) / 2 , objScores
     #return maxLU
     #return avgLU
 
