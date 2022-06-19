@@ -95,14 +95,15 @@ def location_uncertainty(predictions, confidences):
     objects, confPairs = hungarian_clustering(predictions, confidences, 0.3)
 
     inferences = len(predictions)
+    objScores = [0]*len(objects)
     if len(objects) < 1:
-        return 0
+        return 0, objScores
     
     sumLU = 0
     maxLU = 0
     avgLU = 0
 
-    objScores = [0]*len(objects)
+   
 
     for i, preds in enumerate(objects):
         if len(preds) < inferences/2:
