@@ -97,7 +97,7 @@ def location_uncertainty(predictions, confidences):
     inferences = len(predictions)
     objScores = [0]*len(objects)
     if len(objects) < 1:
-        return 0, objScores
+        return 0, 0
     
     sumLU = 0
     maxLU = 0
