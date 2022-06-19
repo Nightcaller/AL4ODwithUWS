@@ -211,7 +211,13 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         if al == "random":
             al_u.append((Path(path).stem, random_sampling()))
         if al == "lu_d":
-            imageScore, objectScores = location_uncertainty(predictions, confidences)
+            result = location_uncertainty(predictions, confidences)
+            if result == None:
+                imageScore = 0
+                objectScores = [0]
+            else:
+                imageScore, objectScores = result
+
             al_u.append((Path(path).stem, imageScore))
             for i, pred in enumerate(predictions[0]):
                 pred[4] = objectScores[i]
