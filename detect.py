@@ -437,7 +437,7 @@ def parse_opt(known=False):
     parser.add_argument('--dropout', type=int, default=10, help='how many inferences should be run in case of dropout al detection') #added
     # parser.add_argument('--al_random', action='store_true', help='activate random acquisition values') #added
     # parser.add_argument('--al_leastConf', action='store_true', help='activate least confidence acquisition values') #added
-    parser.add_argument('--al', default='lc', help='activate least confidence acquisition values') #added
+    parser.add_argument('--al', default='lu_d', help='activate least confidence acquisition values') #added
 ##########
 
     opt = parser.parse_known_args()[0] if known else parser.parse_args()
