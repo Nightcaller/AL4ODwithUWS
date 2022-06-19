@@ -102,7 +102,7 @@ def location_uncertainty(predictions, confidences):
     maxLU = 0
     avgLU = 0
 
-    
+    objScores = [0]*len(objects)
 
     for i, preds in enumerate(objects):
         if len(preds) < inferences/2:
@@ -120,12 +120,13 @@ def location_uncertainty(predictions, confidences):
         maxLU = max(lu,maxLU)
         
         
+        objScores[i] = lu
     avgLU = sumLU / len(objects)
 
     weightedLU = (avgLU + maxLU + sumLU) / 3
 
 
-    return (avgLU + maxLU) / 2
+    return (avgLU + maxLU) / 2, objScores
     #return maxLU
     #return avgLU
 

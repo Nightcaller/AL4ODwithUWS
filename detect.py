@@ -211,7 +211,11 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         if al == "random":
             al_u.append((Path(path).stem, random_sampling()))
         if al == "lu_d":
-            al_u.append((Path(path).stem, location_uncertainty(predictions, confidences)))
+            imageScore, objectScores = location_uncertainty(predictions, confidences)
+            al_u.append((Path(path).stem, imageScore))
+            for i, pred in enumerate(predictions[0]):
+                pred[4] = objectScores[i]
+
         if al == "lu_e":
 
             #add mean box at predictions[0] as ref box 
@@ -303,7 +307,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
                             #Reference label
                             if(objN == len(predictions)-1 and  (al == "lu_d" or al == "entropy_d" or al == "ral" )):
-                                label = f'{len(prediction)-1} | {conf:.2f}' 
+                                label = f'U(O): {conf:.4f}' 
                                 annotator = Annotator(im0, line_width=2, example=str(names))
                                 annotator.box_label(xyxy, label, (50,205,50)) #limegreen box
                             #Dropoutlabels
@@ -433,7 +437,7 @@ def parse_opt(known=False):
     parser.add_argument('--dropout', type=int, default=10, help='how many inferences should be run in case of dropout al detection') #added
     # parser.add_argument('--al_random', action='store_true', help='activate random acquisition values') #added
     # parser.add_argument('--al_leastConf', action='store_true', help='activate least confidence acquisition values') #added
-    parser.add_argument('--al', default='lu_d', help='activate least confidence acquisition values') #added
+    parser.add_argument('--al', default='lc', help='activate least confidence acquisition values') #added
 ##########
 
     opt = parser.parse_known_args()[0] if known else parser.parse_args()
