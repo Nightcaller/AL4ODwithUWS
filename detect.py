@@ -37,7 +37,7 @@ from utils.plots import Annotator, colors, save_one_box
 from utils.torch_utils import select_device, time_sync, apply_dropout
 
 from utils.active_learning import random_sampling, uncertainty, least_confidence, location_stability, robustness, margin,entropy, location_uncertainty, cluster_entropy
-from utils.al_helpers import save_text, plot_distribution, gaussian_noise, flip_predicitions
+from utils.al_helpers import save_text, plot_distribution, gaussian_noise, flip_predicitions, hungarian_clustering
 
 @torch.no_grad()
 def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
@@ -122,7 +122,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
 
 
-    
+    col = 0
 #########                                        #added 
     inferences = 1                 
     if al == "lu_d" or al == "entropy_d":
@@ -224,11 +224,19 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                 pred[4] = objectScores[i]
 
         if al == "lu_e":
+            
+            result = location_uncertainty(predictions, confidences, ensemble=True)
+            if result == None:
+                imageScore = 0
+                objectScores = [0]
+            else:
+                #print(result)
+                imageScore, objectScores = result
+                al_u.append((Path(path).stem, imageScore))
+                for i, pred in enumerate(predictions[0]):
+                    pred[4] = objectScores[i]
 
-            #add mean box at predictions[0] as ref box 
-            #al_u.append((Path(path).stem, location_uncertainty(predictions, confidences)))
-            print("not implemented")
-            break
+                
         if al == "lc":
             al_u.append((Path(path).stem, least_confidence(pred[0])))
         if al == "margin":
@@ -248,9 +256,10 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 
         #added
         im0 = im0s.copy()   # to annotate every pred on same image  
-
+        objects, confPairs = hungarian_clustering(predictions, confidences, 0.3)
         # Process predictions
-        for objN ,prediction in enumerate(predictions[::-1]):
+
+        for objN ,prediction in enumerate(objects[::-1]):
 
             for i, det in enumerate(prediction):  # per image
 
@@ -291,7 +300,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                     #    n = (det[:, -1] == c).sum()  # detections per class
                         #s += f"{n} {names[int(c)]}{'s' * (n > 1)}, "  # add to string
 
-
+                    
 
                     # Write results
                     for *xyxy, conf, cls in reversed(det):
@@ -311,19 +320,53 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                             #    label = f'{len(prediction)-1} | {conf:.2f}' 
                             #    annotator = Annotator(im0, line_width=2, example=str(names))
                             #    annotator.box_label(xyxy, label, (0,0,0)) #black box
+                            colorsAr= [
+                                (66, 135, 245),(252, 30, 3),(3, 252, 132),
+                                (33, 16, 115),(3, 252, 132),
+                                (252, 0, 122),(0,0,0),(252, 0, 206),
+                                (3, 244, 252),(255,255,255),(235, 64, 52),
+                                (252, 111, 3),(140, 13, 127),
+                                (50,0,50),(3, 194, 252),
+                                (3, 148, 252),(3, 74, 252),
+                                (66, 135, 245),(252, 30, 3),(3, 252, 132),
+                                (3, 244, 252),(255,255,255),
+                                (252, 0, 122),(0,0,0),(252, 0, 206),
+                                (50,0,50),(3, 194, 252),
+                                (3, 244, 252),(255,255,255),(235, 64, 52),
+                                (66, 135, 245),(252, 30, 3),(3, 252, 132),
+                                (33, 16, 115),(3, 252, 132),
+                                (252, 0, 122),(0,0,0),(252, 0, 206),
+                                (3, 244, 252),(255,255,255),(235, 64, 52),
+                                (252, 111, 3),(140, 13, 127),
+                                (50,0,50),(3, 194, 252),
+                                (3, 148, 252),(3, 74, 252),
+                                (66, 135, 245),(252, 30, 3),(3, 252, 132),
+                                (3, 244, 252),(255,255,255),
+                                (252, 0, 122),(0,0,0),(252, 0, 206),
+                                (50,0,50),(3, 194, 252),
+                                (3, 244, 252),(255,255,255),(235, 64, 52),
+                                (66, 135, 245),(252, 30, 3),(3, 252, 132),
 
+                            ]
+                            
                             #Reference label
                             if(objN == len(predictions)-1 and  (al == "lu_d" or al == "entropy_d" or al == "ral" )):
-                                label = f'U(O): {conf:.4f}' 
-                                annotator = Annotator(im0, line_width=2, example=str(names))
-                                annotator.box_label(xyxy, label, (50,205,50)) #limegreen box
+                                #label = f'U(O): {conf:.4f}' 
+                                #annotator = Annotator(im0, line_width=2, example=str(names))
+                                #annotator.box_label(xyxy, label, (50,205,50)) #limegreen box
+                                
+                                label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
+                                annotator.box_label(xyxy, label, color=colorsAr[objN])
+                                
                             #Dropoutlabels
                             else:
                                 label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
-                                annotator.box_label(xyxy, label, color=colors(c, True))
+                                #nnotator.box_label(xyxy, label, color=colors(c, True))
+                                annotator.box_label(xyxy, label, color=colorsAr[objN])
+                                
                             if save_crop:
                                 save_one_box(xyxy, imc, file=save_dir / 'crops' / names[c] / f'{p.stem}.jpg', BGR=True)
-
+                    
             # Print time (inference-only)
         
         
@@ -409,9 +452,8 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
 def parse_opt(known=False):
     parser = argparse.ArgumentParser()
     pwd = "/Users/mhpinnovation/Documents/Daniel/Master/detector/bookish-carnival/models/"
-    w = pwd + "11.pt"
-    #w = pwd + "73.pt",pwd + "42.pt",pwd + "11.pt" 
-        #,pwd + "42.pt"]
+    #w = pwd + "11.pt"
+    w = [pwd + "73.pt",pwd + "42.pt",pwd + "11.pt" ,pwd + "42.pt"]
         #
     parser.add_argument('--weights', nargs='+', type=str, default=w, help='model path(s)')
     parser.add_argument('--source', type=str, default=ROOT / 'data/images', help='file/dir/URL/glob, 0 for webcam')
@@ -444,7 +486,7 @@ def parse_opt(known=False):
     parser.add_argument('--dropout', type=int, default=10, help='how many inferences should be run in case of dropout al detection') #added
     # parser.add_argument('--al_random', action='store_true', help='activate random acquisition values') #added
     # parser.add_argument('--al_leastConf', action='store_true', help='activate least confidence acquisition values') #added
-    parser.add_argument('--al', default='lu_d', help='activate least confidence acquisition values') #added
+    parser.add_argument('--al', default='lu_e', help='activate least confidence acquisition values') #added
 ##########
 
     opt = parser.parse_known_args()[0] if known else parser.parse_args()

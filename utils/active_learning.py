@@ -90,7 +90,7 @@ def cluster_entropy(predictions, confidences):
 
 
 
-def location_uncertainty(predictions, confidences):
+def location_uncertainty(predictions, confidences, ensemble=False):
 
     objects, confPairs = hungarian_clustering(predictions, confidences, 0.3)
 
@@ -104,6 +104,12 @@ def location_uncertainty(predictions, confidences):
     maxLU = 0
     avgLU = 0
 
+
+    #add mean box at [0] as ref box 
+    if(ensemble):
+        for i in range(len(objects)):
+            meanPred = torch.mean(objects[i], 0)
+            objects[i] = torch.cat((meanPred[None,:],objects[i] ), 0)
 
     for i, preds in enumerate(objects):
         if len(preds) < inferences/2:

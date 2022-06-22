@@ -230,7 +230,7 @@ def js_divergence(p, q):
     return 0.5 * kl_divergence(p, m) + 0.5 * kl_divergence(q, m)
 
 
-def hungarian_clustering(predictions, confidences = -1, threshold = 0):
+def hungarian_clustering(predictions, confidences = -1, threshold = 0.5):
 
     objects = []
     confs = []
@@ -273,10 +273,10 @@ def hungarian_clustering(predictions, confidences = -1, threshold = 0):
                 if confidences != -1:
                     confs[index] = torch.cat((confs[index], confidences[j][k][None,:]), 0) 
             
-            #else:                                   # create new cluster
-            #    objects.append(box[None,:])
-            #    if confidences != -1:
-            #        confs.append(confidences[j][k][None,:])
+            else:                                   # create new cluster
+                objects.append(box[None,:])
+                if confidences != -1:
+                    confs.append(confidences[j][k][None,:])
                     
 
 
